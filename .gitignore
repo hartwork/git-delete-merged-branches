@@ -1,0 +1,4 @@
+/build/
+/dist/
+/git_delete_merged_branches.egg-info/
+__pycache__/

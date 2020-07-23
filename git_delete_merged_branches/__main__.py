@@ -114,7 +114,7 @@ class _DeleteMergedBranches:
         return cls._filter_git_config(git_config, cls._PATTERN_REMOTE_ENABLED)
 
     @classmethod
-    def _find_branches_merged_to_all_targets_using(cls, getter, required_target_branches):
+    def _find_branches_merged_to_all_targets_using(cls, getter, required_target_branches) -> Set[str]:
         if len(required_target_branches) == 1:
             target_branch = next(iter(required_target_branches))
             branches_merged_to_all_required_targets = set(getter(target_branch))
@@ -127,6 +127,10 @@ class _DeleteMergedBranches:
     def _delete_local_merged_branches_for(self, required_target_branches):
         local_branches_to_delete = self._find_branches_merged_to_all_targets_using(
             self._git.find_merged_local_branches_for, required_target_branches)
+
+        current_branch = self._git.find_current_branch()
+        if current_branch in local_branches_to_delete:
+            local_branches_to_delete.remove(current_branch)
 
         if not local_branches_to_delete:
             return

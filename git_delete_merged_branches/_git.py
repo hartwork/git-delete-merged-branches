@@ -18,7 +18,8 @@ class Git:
         pretend = is_write and self._pretend
         if self._verbose:
             epilog = '   # skipped due to --pretend' if pretend else ''
-            print(f'# {" ".join(argv)}{epilog}', file=sys.stderr)
+            display_argv = [a for a in argv if not a.startswith('--format=')]
+            print(f'# {" ".join(display_argv)}{epilog}', file=sys.stderr)
         if pretend:
             return bytes()
         return subprocess.check_output(argv)

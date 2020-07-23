@@ -51,7 +51,7 @@ class _DeleteMergedBranches:
     def _interactively_edit_list(self, description, get_all, get_previous, format,
                                  min_selection_count):
         heading = f'== Configure {APP} for this repository =='
-        help = '(Press [Space] to toggle selection, [Enter] to accept, [Ctrl]+[C] to quit.)'
+        help = '(Press [Space] to toggle selection, [Enter]/[Return] to accept, [Ctrl]+[C] to quit.)'
         heading = f'{heading}\n{description}\n\n{help}'
 
         valid_names = get_all()

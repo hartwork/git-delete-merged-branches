@@ -26,6 +26,7 @@ While `git reflog` would have your back in most cases,
 
 Here's what `git-delete-merged-branches` does for your safety:
 - No branches are deleted without confirmation or passing `--yes`.
+- Confirmation defaults to "no"; plain `[Enter]`/`[Return]` does not delete.
 - `git push` is used with `--force-with-lease` so if the server and you have a different understanding of that branch, it is not deleted.
 - There is no use of `os.system` or shell code to go wrong.
 - With `--dry-run` you can get a feel for the changes that `git-delete-merged-branches` would be making to your branches.

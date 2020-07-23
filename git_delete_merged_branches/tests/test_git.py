@@ -5,6 +5,8 @@ import subprocess
 from unittest import TestCase
 from unittest.mock import patch
 
+from parameterized import parameterized
+
 from .._git import Git
 
 
@@ -20,3 +22,17 @@ class FindBranchesTest(TestCase):
             actual_branches = git._find_branches()
 
         self.assertEqual(actual_branches, expected_branches)
+
+
+class OutputBytesToTinesTest(TestCase):
+    @parameterized.expand([
+        (b'one\ntwo', ['one', 'two']),
+        (b'one\ntwo\n', ['one', 'two']),
+        (b'one\ntwo\n\n', ['one', 'two']),
+        (b'', []),
+        (b'\n', []),
+        (b'\n\n', []),
+    ])
+    def test_trailing_newlines(self, output_bytes, extected_interpretation):
+        self.assertEqual(Git._output_bytes_to_lines(output_bytes),
+                         extected_interpretation)

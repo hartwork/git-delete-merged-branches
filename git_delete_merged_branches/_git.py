@@ -4,7 +4,7 @@
 import subprocess
 import sys
 from collections import OrderedDict
-from typing import Optional
+from typing import Optional, List
 
 
 class Git:
@@ -26,8 +26,11 @@ class Git:
         return subprocess.check_output(argv)
 
     @classmethod
-    def _output_bytes_to_lines(cls, output_bytes):
-        return output_bytes.decode('utf-8').rstrip().split('\n')
+    def _output_bytes_to_lines(cls, output_bytes) -> List[str]:
+        text = output_bytes.decode('utf-8').rstrip()
+        if not text:  # protect against this: ''.split('\n') -> ['']
+            return []
+        return text.split('\n')
 
     def extract_git_config(self):
         argv = [self._GIT, 'config', '--list']

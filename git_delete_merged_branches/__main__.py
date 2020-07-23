@@ -36,6 +36,19 @@ class _ZeroMergeTargetsException(_DmbException):
         super().__init__(f'One or more existing target branch is required.')
 
 
+class _TooFewOptionsAvailable(_DmbException):
+    pass
+
+
+class _GitRepositoryWithoutBranches(_DmbException):
+    """
+    Exception for the time between "git init" and the first "git commit"
+    where "git branch" will tell us that there are no branches
+    """
+    def __init__(self):
+        super().__init__('This Git repository does not have any branches.')
+
+
 class _DeleteMergedBranches:
     _CONFIG_KEY_CONFIGURED = 'dmb.configured'
     _CONFIG_VALUE_TRUE = 'true'
@@ -48,16 +61,22 @@ class _DeleteMergedBranches:
         self._confirmation = confirmation
         self._git = git
 
-    def _interactively_edit_list(self, description, get_all, get_previous, format,
+    def _interactively_edit_list(self, description, valid_names, old_names, format,
                                  min_selection_count):
+        if len(valid_names) < min_selection_count:
+            raise _TooFewOptionsAvailable
+
         heading = f'== Configure {APP} for this repository =='
         help = '(Press [Space] to toggle selection, [Enter]/[Return] to accept, [Ctrl]+[C] to quit.)'
         heading = f'{heading}\n{description}\n\n{help}'
 
-        valid_names = get_all()
-        old_names = set(get_previous())
+        old_names = set(old_names)
         initial_selection = [i for i, name in enumerate(valid_names) if name in old_names]
-        new_names = set(multiselect(valid_names, initial_selection, heading, min_selection_count))
+        if valid_names:
+            new_names = set(multiselect(valid_names, initial_selection, heading, min_selection_count))
+        else:
+            new_names = set()
+        assert len(new_names) >= min_selection_count
         names_to_remove = old_names - new_names
         names_to_add = new_names - old_names
 
@@ -69,13 +88,16 @@ class _DeleteMergedBranches:
                 self._git.set_config(key, new_value)
 
     def _configure_required_branches(self, git_config):
-        self._interactively_edit_list('[1/2] For a branch to be considered fully merged, which other branches must it have been merged to?',
-                                      self._git.find_local_branches, partial(self.find_required_branches, git_config),
-                                      self._FORMAT_BRANCH_REQUIRED, min_selection_count=1)
+        try:
+            self._interactively_edit_list('[1/2] For a branch to be considered fully merged, which other branches must it have been merged to?',
+                                          self._git.find_local_branches(), self.find_required_branches(git_config),
+                                          self._FORMAT_BRANCH_REQUIRED, min_selection_count=1)
+        except _TooFewOptionsAvailable:
+            raise _GitRepositoryWithoutBranches
 
     def _configure_enabled_remotes(self, git_config):
         self._interactively_edit_list('[2/2] Which remotes (if any) do you want to enable deletion of merged branches for?',
-                                      self._git.find_remotes, partial(self.find_enabled_remotes, git_config),
+                                      self._git.find_remotes(), self.find_enabled_remotes(git_config),
                                       self._FORMAT_REMOTE_ENABLED, min_selection_count=0)
 
     def _configure(self, git_config):

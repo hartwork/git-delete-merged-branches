@@ -26,6 +26,9 @@ setup(
     install_requires=[
         'pick>=0.6.7',
     ],
+    tests_require=[
+        'parameterized',
+    ],
 
     packages=find_packages(),
 

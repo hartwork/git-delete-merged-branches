@@ -131,7 +131,7 @@ class _DeleteMergedBranches:
         if not local_branches_to_delete:
             return
 
-        description = (f'You are about to delete {len(local_branches_to_delete)} local branche(s):\n'
+        description = (f'You are about to delete {len(local_branches_to_delete)} local branch(es):\n'
                        + '\n'.join(f'  - {name}' for name in sorted(local_branches_to_delete))
                        + '\n\nDelete?')
         self._confirmation.require_for(description)
@@ -152,7 +152,7 @@ class _DeleteMergedBranches:
         if not remote_branches_to_delete:
             return
 
-        description = (f'You are about to delete {len(remote_branches_to_delete)} remote branche(s):\n'
+        description = (f'You are about to delete {len(remote_branches_to_delete)} remote branch(es):\n'
                        + '\n'.join(f'  - {name}' for name in sorted(remote_branches_to_delete))
                        + '\n\nDelete?')
         self._confirmation.require_for(description)

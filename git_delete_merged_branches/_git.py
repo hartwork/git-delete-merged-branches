@@ -4,6 +4,7 @@
 import subprocess
 import sys
 from collections import OrderedDict
+from typing import Optional
 
 
 class Git:
@@ -62,6 +63,13 @@ class Git:
 
     def find_all_branches(self):
         return self._find_branches(['--all'])
+
+    def find_current_branch(self) -> Optional[str]:
+        branch_names = self._find_branches(['--show-current'])
+        if not branch_names:
+            return None
+        assert len(branch_names) == 1
+        return branch_names[0]
 
     def _get_merged_branches_for(self, target_branch: str, remote: bool):
         extra_argv = []

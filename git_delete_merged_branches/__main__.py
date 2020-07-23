@@ -48,14 +48,13 @@ class _DeleteMergedBranches:
         self._confirmation = confirmation
         self._git = git
 
-    def _interactively_edit_list(self, description, get_all, get_previous, format,
+    def _interactively_edit_list(self, description, valid_names, old_names, format,
                                  min_selection_count):
         heading = f'== Configure {APP} for this repository =='
         help = '(Press [Space] to toggle selection, [Enter]/[Return] to accept, [Ctrl]+[C] to quit.)'
         heading = f'{heading}\n{description}\n\n{help}'
 
-        valid_names = get_all()
-        old_names = set(get_previous())
+        old_names = set(old_names)
         initial_selection = [i for i, name in enumerate(valid_names) if name in old_names]
         new_names = set(multiselect(valid_names, initial_selection, heading, min_selection_count))
         names_to_remove = old_names - new_names
@@ -70,12 +69,12 @@ class _DeleteMergedBranches:
 
     def _configure_required_branches(self, git_config):
         self._interactively_edit_list('[1/2] For a branch to be considered fully merged, which other branches must it have been merged to?',
-                                      self._git.find_local_branches, partial(self.find_required_branches, git_config),
+                                      self._git.find_local_branches(), self.find_required_branches(git_config),
                                       self._FORMAT_BRANCH_REQUIRED, min_selection_count=1)
 
     def _configure_enabled_remotes(self, git_config):
         self._interactively_edit_list('[2/2] Which remotes (if any) do you want to enable deletion of merged branches for?',
-                                      self._git.find_remotes, partial(self.find_enabled_remotes, git_config),
+                                      self._git.find_remotes(), self.find_enabled_remotes(git_config),
                                       self._FORMAT_REMOTE_ENABLED, min_selection_count=0)
 
     def _configure(self, git_config):

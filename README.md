@@ -15,7 +15,7 @@ pip install git-delete-merged-branches
 - Supports workflows with multiple release branches, e.g. only delete branches that have been merged to *all* of `master`, `dev`  and `staging`
 - Quick interactive configuration
 - Provider agnostic: Works with GitHub, GitLab and any other Git hosting
-- Takes safety serious
+- Takes safety seriously
 
 
 # Safety

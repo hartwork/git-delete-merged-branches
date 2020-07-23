@@ -138,7 +138,8 @@ class _DeleteMergedBranches:
         description = (f'You are about to delete {len(local_branches_to_delete)} local branch(es):\n'
                        + '\n'.join(f'  - {name}' for name in sorted(local_branches_to_delete))
                        + '\n\nDelete?')
-        self._confirmation.require_for(description)
+        if not self._confirmation.confirmed(description):
+            return
 
         self._git.delete_local_branches(local_branches_to_delete)
 
@@ -159,7 +160,8 @@ class _DeleteMergedBranches:
         description = (f'You are about to delete {len(remote_branches_to_delete)} remote branch(es):\n'
                        + '\n'.join(f'  - {name}' for name in sorted(remote_branches_to_delete))
                        + '\n\nDelete?')
-        self._confirmation.require_for(description)
+        if not self._confirmation.confirmed(description):
+            return
 
         self._git.delete_remote_branches(remote_branches_to_delete, remote_name)
 

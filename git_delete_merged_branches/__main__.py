@@ -74,7 +74,7 @@ class _DeleteMergedBranches:
                                       self._FORMAT_BRANCH_REQUIRED, min_selection_count=1)
 
     def _configure_enabled_remotes(self, git_config):
-        self._interactively_edit_list('[2/2] Which remotes do you want to enable deletion of merged branches for?',
+        self._interactively_edit_list('[2/2] Which remotes (if any) do you want to enable deletion of merged branches for?',
                                       self._git.find_remotes, partial(self.find_enabled_remotes, git_config),
                                       self._FORMAT_REMOTE_ENABLED, min_selection_count=0)
 

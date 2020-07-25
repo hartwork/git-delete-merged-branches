@@ -24,7 +24,7 @@ class FindBranchesTest(TestCase):
         self.assertEqual(actual_branches, expected_branches)
 
 
-class OutputBytesToTinesTest(TestCase):
+class OutputBytesToLinesTest(TestCase):
     @parameterized.expand([
         (b'one\ntwo', ['one', 'two']),
         (b'one\ntwo\n', ['one', 'two']),

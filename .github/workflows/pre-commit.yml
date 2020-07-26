@@ -1,0 +1,17 @@
+# Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under GPL v3 or later
+
+name: Run pre-commit
+
+on:
+- pull_request
+- push
+
+jobs:
+  pre-commit:
+    name: Run pre-commit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+    - uses: pre-commit/action@v2.0.0

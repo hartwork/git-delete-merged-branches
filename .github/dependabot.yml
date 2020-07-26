@@ -1,0 +1,17 @@
+# Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under GPL v3 or later
+
+version: 2
+updates:
+
+  - package-ecosystem: "github-actions"
+    commit-message:
+      include: "scope"
+      prefix: "Actions"
+    directory: "/"
+    labels:
+      - "enhancement"
+    assignees:
+      - "hartwork"
+    schedule:
+      interval: "weekly"

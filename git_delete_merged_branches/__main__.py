@@ -2,19 +2,19 @@
 # Licensed under GPL v3 or later
 
 import argparse
-import traceback
-from signal import SIGINT
-from functools import reduce, partial
-from operator import and_
-from subprocess import CalledProcessError
-from typing import List, Set
 import re
 import sys
+import traceback
+from functools import partial, reduce
+from operator import and_
+from signal import SIGINT
+from subprocess import CalledProcessError
+from typing import List, Set
 
 from ._confirm import Confirmation
 from ._git import Git
-from ._multiselect import multiselect
 from ._metadata import APP, VERSION
+from ._multiselect import multiselect
 
 
 class _DmbException(Exception):
@@ -33,7 +33,7 @@ class _NoSuchRemoteException(_DmbException):
 
 class _ZeroMergeTargetsException(_DmbException):
     def __init__(self):
-        super().__init__(f'One or more existing target branch is required.')
+        super().__init__('One or more existing target branch is required.')
 
 
 class _TooFewOptionsAvailable(_DmbException):
@@ -67,13 +67,15 @@ class _DeleteMergedBranches:
             raise _TooFewOptionsAvailable
 
         heading = f'== Configure {APP} for this repository =='
-        help = '(Press [Space] to toggle selection, [Enter]/[Return] to accept, [Ctrl]+[C] to quit.)'
+        help = ('(Press [Space] to toggle selection, [Enter]/[Return] to accept'
+                ', [Ctrl]+[C] to quit.)')
         heading = f'{heading}\n{description}\n\n{help}'
 
         old_names = set(old_names)
         initial_selection = [i for i, name in enumerate(valid_names) if name in old_names]
         if valid_names:
-            new_names = set(multiselect(valid_names, initial_selection, heading, min_selection_count))
+            new_names = set(multiselect(valid_names, initial_selection,
+                                        heading, min_selection_count))
         else:
             new_names = set()
         assert len(new_names) >= min_selection_count
@@ -89,15 +91,19 @@ class _DeleteMergedBranches:
 
     def _configure_required_branches(self, git_config):
         try:
-            self._interactively_edit_list('[1/2] For a branch to be considered fully merged, which other branches must it have been merged to?',
-                                          self._git.find_local_branches(), self.find_required_branches(git_config),
+            self._interactively_edit_list('[1/2] For a branch to be considered fully merged'
+                                          ', which other branches must it have been merged to?',
+                                          self._git.find_local_branches(),
+                                          self.find_required_branches(git_config),
                                           self._FORMAT_BRANCH_REQUIRED, min_selection_count=1)
         except _TooFewOptionsAvailable:
             raise _GitRepositoryWithoutBranches
 
     def _configure_enabled_remotes(self, git_config):
-        self._interactively_edit_list('[2/2] Which remotes (if any) do you want to enable deletion of merged branches for?',
-                                      self._git.find_remotes(), self.find_enabled_remotes(git_config),
+        self._interactively_edit_list('[2/2] Which remotes (if any) do you want to enable'
+                                      ' deletion of merged branches for?',
+                                      self._git.find_remotes(),
+                                      self.find_enabled_remotes(git_config),
                                       self._FORMAT_REMOTE_ENABLED, min_selection_count=0)
 
     def _configure(self, git_config):
@@ -136,7 +142,8 @@ class _DeleteMergedBranches:
         return cls._filter_git_config(git_config, cls._PATTERN_REMOTE_ENABLED)
 
     @classmethod
-    def _find_branches_merged_to_all_targets_using(cls, getter, required_target_branches) -> Set[str]:
+    def _find_branches_merged_to_all_targets_using(cls, getter,
+                                                   required_target_branches) -> Set[str]:
         if len(required_target_branches) == 1:
             target_branch = next(iter(required_target_branches))
             branches_merged_to_all_required_targets = set(getter(target_branch))
@@ -157,7 +164,8 @@ class _DeleteMergedBranches:
         if not local_branches_to_delete:
             return
 
-        description = (f'You are about to delete {len(local_branches_to_delete)} local branch(es):\n'
+        description = (f'You are about to delete {len(local_branches_to_delete)}'
+                       ' local branch(es):\n'
                        + '\n'.join(f'  - {name}' for name in sorted(local_branches_to_delete))
                        + '\n\nDelete?')
         if not self._confirmation.confirmed(description):
@@ -174,12 +182,14 @@ class _DeleteMergedBranches:
         candidate_branches = self._find_branches_merged_to_all_targets_using(
             partial(self._git.find_merged_remote_branches_for, remote_name),
             required_target_branches)
-        remote_branches_to_delete = [b for b in candidate_branches if b.startswith(f'{remote_name}/')]
+        remote_branches_to_delete = [
+            b for b in candidate_branches if b.startswith(f'{remote_name}/')]
 
         if not remote_branches_to_delete:
             return
 
-        description = (f'You are about to delete {len(remote_branches_to_delete)} remote branch(es):\n'
+        description = (f'You are about to delete {len(remote_branches_to_delete)} '
+                       'remote branch(es):\n'
                        + '\n'.join(f'  - {name}' for name in sorted(remote_branches_to_delete))
                        + '\n\nDelete?')
         if not self._confirmation.confirmed(description):
@@ -204,8 +214,8 @@ class _DeleteMergedBranches:
                 raise _NoSuchBranchException(required_target_branches[0])
         else:
             required_target_branches_set = (
-                    set(_DeleteMergedBranches.find_required_branches(git_config))
-                    & existing_branches
+                set(_DeleteMergedBranches.find_required_branches(git_config))
+                & existing_branches
             )
 
         if not required_target_branches_set:
@@ -231,19 +241,21 @@ def _parse_command_line():
 
     modes = parser.add_argument_group('modes').add_mutually_exclusive_group()
     modes.add_argument('--configure', dest='force_reconfiguration', action='store_true',
-                        help=f'configure {APP} and exit (without processing any branches)')
+                       help=f'configure {APP} and exit (without processing any branches)')
     modes.add_argument('--help', '-h', action='help', help='show this help message and exit')
     modes.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
 
     scope = parser.add_argument_group('scope')
     scope.add_argument('--remote', '-r', metavar='REMOTE', dest='enabled_remotes', default=[],
-                        action='append',
-                        help='process the given remote (instead of the remotes that are configured for this repository); can be passed multiple times')
+                       action='append',
+                       help='process the given remote (instead of the remotes that are'
+                            ' configured for this repository); can be passed multiple times')
 
     rules = parser.add_argument_group('rules')
-    rules.add_argument('--branch', '-b', metavar='BRANCH', dest='required_target_branches', default=[],
-                        action='append',
-                        help='require the given branch as a merge target (instead of what is configured for this repository); can be passed multiple times')
+    rules.add_argument('--branch', '-b', metavar='BRANCH', dest='required_target_branches',
+                       default=[], action='append',
+                       help='require the given branch as a merge target (instead of what is'
+                            ' configured for this repository); can be passed multiple times')
 
     switches = parser.add_argument_group('flags')
     switches.add_argument('--debug', dest='debug', action='store_true',
@@ -267,8 +279,8 @@ def _innermost_main(config):
     if config.force_reconfiguration:
         return
 
-    required_target_branches = dmb.determine_required_target_branches(git_config,
-                                                                      config.required_target_branches)
+    required_target_branches = dmb.determine_required_target_branches(
+        git_config, config.required_target_branches)
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 
     dmb.delete_merged_branches(required_target_branches, enabled_remotes)

@@ -1,0 +1,27 @@
+# Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under GPL v3 or later
+
+repos:
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.7.2
+    hooks:
+      - id: pyupgrade
+        args: ['--py3-plus', '--py36-plus']
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.1.0
+    hooks:
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.3
+    hooks:
+      - id: flake8
+
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v5.1.4
+    hooks:
+      - id: isort

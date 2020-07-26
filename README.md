@@ -10,6 +10,38 @@ pip install git-delete-merged-branches
 ```
 
 
+# Example
+
+```console
+# git-delete-merged-branches
+You are about to delete 6 local branch(es):
+  - improve-setup-py
+  - issue-12-enable-ci-for-pull-requests
+  - issue-5-fix-waste-of-one-second-per-service
+  - keep-github-actions-up-to-date
+  - refactoring-one
+  - simple-ci
+
+Delete? [y/N] y
+You are about to delete 6 remote branch(es):
+  - origin/improve-setup-py
+  - origin/issue-12-enable-ci-for-pull-requests
+  - origin/issue-5-fix-waste-of-one-second-per-service
+  - origin/keep-github-actions-up-to-date
+  - origin/refactoring-one
+  - origin/simple-ci
+
+Delete? [y/N] y
+To github.com:hartwork/wait-for-it.git
+ - [deleted]         improve-setup-py
+ - [deleted]         issue-12-enable-ci-for-pull-requests
+ - [deleted]         issue-5-fix-waste-of-one-second-per-service
+ - [deleted]         keep-github-actions-up-to-date
+ - [deleted]         refactoring-one
+ - [deleted]         simple-ci
+```
+
+
 # Features
 
 - Supports deletion of both local and remote branches

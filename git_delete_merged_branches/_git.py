@@ -59,7 +59,7 @@ class Git:
             argv += extra_argv
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         lines = self._output_bytes_to_lines(output_bytes)
-        return [l for l in lines if not l.endswith('/HEAD')]
+        return [line for line in lines if not line.endswith('/HEAD')]
 
     def find_local_branches(self):
         return self._find_branches()

@@ -11,7 +11,7 @@ class _PickerWithPreselection(Picker):
         assert hasattr(self, 'all_selected')  # compat break detection
         if initial_selection is not None:
             self.all_selected = sorted(
-                set(i for i in initial_selection if isinstance(i, int) and 0 <= i < len(options)))
+                {i for i in initial_selection if isinstance(i, int) and 0 <= i < len(options)})
             if self.all_selected and kwargs.get('default_index') is None:
                 self.index = self.all_selected[0]
 

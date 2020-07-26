@@ -4,6 +4,7 @@ A convenient command-line tool helping you keep repositories clean.
 
 
 # Installation
+
 ```console
 pip install git-delete-merged-branches
 ```

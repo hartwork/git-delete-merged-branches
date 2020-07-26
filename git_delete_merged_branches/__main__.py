@@ -33,7 +33,7 @@ class _NoSuchRemoteException(_DmbException):
 
 class _ZeroMergeTargetsException(_DmbException):
     def __init__(self):
-        super().__init__(f'One or more existing target branch is required.')
+        super().__init__('One or more existing target branch is required.')
 
 
 class _TooFewOptionsAvailable(_DmbException):

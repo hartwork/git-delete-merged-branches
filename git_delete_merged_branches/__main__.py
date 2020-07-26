@@ -2,19 +2,19 @@
 # Licensed under GPL v3 or later
 
 import argparse
-import traceback
-from signal import SIGINT
-from functools import reduce, partial
-from operator import and_
-from subprocess import CalledProcessError
-from typing import List, Set
 import re
 import sys
+import traceback
+from functools import partial, reduce
+from operator import and_
+from signal import SIGINT
+from subprocess import CalledProcessError
+from typing import List, Set
 
 from ._confirm import Confirmation
 from ._git import Git
-from ._multiselect import multiselect
 from ._metadata import APP, VERSION
+from ._multiselect import multiselect
 
 
 class _DmbException(Exception):

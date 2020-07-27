@@ -5,15 +5,17 @@ import argparse
 import re
 import sys
 import traceback
+from argparse import RawDescriptionHelpFormatter
 from functools import partial, reduce
 from operator import and_
 from signal import SIGINT
 from subprocess import CalledProcessError
+from textwrap import dedent
 from typing import List, Set
 
 from ._confirm import Confirmation
 from ._git import Git
-from ._metadata import APP, VERSION
+from ._metadata import APP, DESCRIPTION, VERSION
 from ._multiselect import multiselect
 
 
@@ -237,7 +239,16 @@ class _DeleteMergedBranches:
 
 
 def _parse_command_line():
-    parser = argparse.ArgumentParser(prog='git-delete-merged-branches', add_help=False)
+    _EPILOG = dedent(f"""\
+        Software libre licensed under GPL v3 or later.
+        Brought to you by Sebastian Pipping <sebastian@pipping.org>.
+
+        Please report bugs at https://github.com/hartwork/{APP}.  Thank you!
+    """)
+
+    parser = argparse.ArgumentParser(prog='git-delete-merged-branches', add_help=False,
+                                     description=DESCRIPTION, epilog=_EPILOG,
+                                     formatter_class=RawDescriptionHelpFormatter)
 
     modes = parser.add_argument_group('modes').add_mutually_exclusive_group()
     modes.add_argument('--configure', dest='force_reconfiguration', action='store_true',

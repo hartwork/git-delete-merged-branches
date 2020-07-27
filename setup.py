@@ -4,14 +4,14 @@
 
 from setuptools import find_packages, setup
 
-from git_delete_merged_branches._metadata import APP, VERSION
+from git_delete_merged_branches._metadata import APP, DESCRIPTION, VERSION
 
 setup(
     name=APP,
     version=VERSION,
 
     license='GPLv3+',
-    description='Command-line tool to delete merged Git branches',
+    description=DESCRIPTION,
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
 

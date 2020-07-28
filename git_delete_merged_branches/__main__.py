@@ -242,13 +242,16 @@ class _DeleteMergedBranches:
                     & existing_remotes)
 
 
-def _parse_command_line():
+def _parse_command_line(args=None):
     _EPILOG = dedent(f"""\
         Software libre licensed under GPL v3 or later.
         Brought to you by Sebastian Pipping <sebastian@pipping.org>.
 
         Please report bugs at https://github.com/hartwork/{APP}.  Thank you!
     """)
+
+    if args is None:
+        args = sys.argv[1:]
 
     colorize = 'NO_COLOR' not in os.environ
     formatter_class = RawDescriptionHelpFormatter
@@ -288,7 +291,7 @@ def _parse_command_line():
     switches.add_argument('--yes', '-y', dest='ask', default=True, action='store_false',
                           help='do not ask for confirmation, assume reply "yes"')
 
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def _innermost_main(config):

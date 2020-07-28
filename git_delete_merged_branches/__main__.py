@@ -2,6 +2,7 @@
 # Licensed under GPL v3 or later
 
 import argparse
+import os
 import re
 import sys
 import traceback
@@ -13,6 +14,9 @@ from subprocess import CalledProcessError
 from textwrap import dedent
 from typing import List, Set
 
+import colorama
+
+from ._argparse_color import add_color_to_formatter_class
 from ._confirm import Confirmation
 from ._git import Git
 from ._metadata import APP, DESCRIPTION, VERSION
@@ -246,9 +250,15 @@ def _parse_command_line():
         Please report bugs at https://github.com/hartwork/{APP}.  Thank you!
     """)
 
+    colorize = 'NO_COLOR' not in os.environ
+    formatter_class = RawDescriptionHelpFormatter
+    if colorize:
+        colorama.init()
+        formatter_class = add_color_to_formatter_class(formatter_class)
+
     parser = argparse.ArgumentParser(prog='git-delete-merged-branches', add_help=False,
                                      description=DESCRIPTION, epilog=_EPILOG,
-                                     formatter_class=RawDescriptionHelpFormatter)
+                                     formatter_class=formatter_class)
 
     modes = parser.add_argument_group('modes').add_mutually_exclusive_group()
     modes.add_argument('--configure', dest='force_reconfiguration', action='store_true',

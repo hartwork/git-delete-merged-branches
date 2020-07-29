@@ -24,6 +24,7 @@ setup(
         'setuptools>=38.6.0',  # for long_description_content_type
     ],
     install_requires=[
+        'colorama>=0.4.3',
         'pick>=0.6.7',
     ],
     tests_require=[

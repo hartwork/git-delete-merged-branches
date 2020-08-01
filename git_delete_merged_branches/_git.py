@@ -127,3 +127,7 @@ class Git:
             argv += [key, value]
 
         self._subprocess_check_output(argv, is_write=True)
+
+    def update_and_prune_remote(self, remote_name: str) -> None:
+        argv = [self._GIT, 'remote', 'update', '--prune', remote_name]
+        self._subprocess_check_output(argv, is_write=True)

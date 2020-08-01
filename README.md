@@ -68,10 +68,9 @@ Here's what `git-delete-merged-branches` does for your safety:
 
 # Best Practices
 
-- Consider running `git remote update --prune` before using `git-delete-merged-branches` for best results.
-- When the repository is a fork:
-  - consider keeping your local `master` up to date (by making it a tracking branch or by using `git pull`).
-  - consider keeping your fork's remote `master` up to date (using `git push`).
+When the repository is a fork:
+- consider keeping your local `master` up to date (by making it a tracking branch or by using `git pull`).
+- consider keeping your fork's remote `master` up to date (using `git push`).
 
 
 # Support

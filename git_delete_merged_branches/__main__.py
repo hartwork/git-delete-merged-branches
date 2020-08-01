@@ -170,6 +170,7 @@ class _DeleteMergedBranches:
             local_branches_to_delete.remove(current_branch)
 
         if not local_branches_to_delete:
+            self._messenger.tell_info('No local branches deleted.')
             return
 
         description = (f'You are about to delete {len(local_branches_to_delete)}'
@@ -180,6 +181,7 @@ class _DeleteMergedBranches:
             return
 
         self._git.delete_local_branches(local_branches_to_delete)
+        self._messenger.tell_info('{len(local_branches_to_delete)} local branch(es) deleted.')
 
     def _delete_remote_merged_branches_for(self, required_target_branches, remote_name,
                                            all_branch_names: Set[str]):
@@ -194,6 +196,7 @@ class _DeleteMergedBranches:
             b for b in candidate_branches if b.startswith(f'{remote_name}/')]
 
         if not remote_branches_to_delete:
+            self._messenger.tell_info('No remote branches deleted.')
             return
 
         description = (f'You are about to delete {len(remote_branches_to_delete)} '
@@ -204,6 +207,7 @@ class _DeleteMergedBranches:
             return
 
         self._git.delete_remote_branches(remote_branches_to_delete, remote_name)
+        self._messenger.tell_info('{len(remote_branches_to_delete)} remote branch(es) deleted.')
 
     def refresh_remotes(self, enabled_remotes):
         sorted_remotes = sorted(set(enabled_remotes))

@@ -18,7 +18,7 @@ class Git:
     def _subprocess_check_output(self, argv, is_write):
         pretend = is_write and self._pretend
         if self._verbose:
-            epilog = '   # skipped due to --pretend' if pretend else ''
+            epilog = '   # skipped due to --dry-run' if pretend else ''
             display_argv = [a for a in argv if not a.startswith('--format=')]
             print(f'# {" ".join(display_argv)}{epilog}', file=sys.stderr)
         if pretend:

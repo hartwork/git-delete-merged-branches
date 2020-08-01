@@ -19,6 +19,7 @@ import colorama
 from ._argparse_color import add_color_to_formatter_class
 from ._confirm import Confirmation
 from ._git import Git
+from ._messenger import Messenger
 from ._metadata import APP, DESCRIPTION, VERSION
 from ._multiselect import multiselect
 
@@ -63,8 +64,9 @@ class _DeleteMergedBranches:
     _FORMAT_REMOTE_ENABLED = 'remote.{name}.dmb-enabled'
     _FORMAT_BRANCH_REQUIRED = 'branch.{name}.dmb-required'
 
-    def __init__(self, git, confirmation):
+    def __init__(self, git, messenger, confirmation):
         self._confirmation = confirmation
+        self._messenger = messenger
         self._git = git
 
     def _interactively_edit_list(self, description, valid_names, old_names, format,
@@ -286,7 +288,7 @@ class _DeleteMergedBranches:
                     & existing_remotes)
 
 
-def _parse_command_line(args=None):
+def _parse_command_line(colorize: bool, args=None):
     _EPILOG = dedent(f"""\
         Software libre licensed under GPL v3 or later.
         Brought to you by Sebastian Pipping <sebastian@pipping.org>.
@@ -297,10 +299,8 @@ def _parse_command_line(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    colorize = 'NO_COLOR' not in os.environ
     formatter_class = RawDescriptionHelpFormatter
     if colorize:
-        colorama.init()
         formatter_class = add_color_to_formatter_class(formatter_class)
 
     parser = argparse.ArgumentParser(prog='git-delete-merged-branches', add_help=False,
@@ -338,10 +338,10 @@ def _parse_command_line(args=None):
     return parser.parse_args(args)
 
 
-def _innermost_main(config):
+def _innermost_main(config, messenger):
     git = Git(ask=config.ask, pretend=config.pretend, verbose=config.verbose)
     confirmation = Confirmation(ask=config.ask)
-    dmb = _DeleteMergedBranches(git, confirmation)
+    dmb = _DeleteMergedBranches(git, messenger, confirmation)
 
     git_config = dmb.ensure_configured(config.force_reconfiguration)
     if config.force_reconfiguration:
@@ -357,9 +357,15 @@ def _innermost_main(config):
 
 
 def _inner_main():
-    config = _parse_command_line()
+    colorize = 'NO_COLOR' not in os.environ
+    if colorize:
+        colorama.init()
+
+    messenger = Messenger(colorize=colorize)
+
+    config = _parse_command_line(colorize=colorize)
     try:
-        _innermost_main(config)
+        _innermost_main(config, messenger)
     except CalledProcessError as e:
         # Produce more human-friendly output than str(e)
         message = f"Command '{' '.join(e.cmd)}' returned non-zero exit status {e.returncode}."

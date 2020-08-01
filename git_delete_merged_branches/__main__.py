@@ -19,6 +19,7 @@ import colorama
 from ._argparse_color import add_color_to_formatter_class
 from ._confirm import Confirmation
 from ._git import Git
+from ._messenger import Messenger
 from ._metadata import APP, DESCRIPTION, VERSION
 from ._multiselect import multiselect
 
@@ -63,8 +64,9 @@ class _DeleteMergedBranches:
     _FORMAT_REMOTE_ENABLED = 'remote.{name}.dmb-enabled'
     _FORMAT_BRANCH_REQUIRED = 'branch.{name}.dmb-required'
 
-    def __init__(self, git, confirmation):
+    def __init__(self, git, messenger, confirmation):
         self._confirmation = confirmation
+        self._messenger = messenger
         self._git = git
 
     def _interactively_edit_list(self, description, valid_names, old_names, format,
@@ -168,6 +170,7 @@ class _DeleteMergedBranches:
             local_branches_to_delete.remove(current_branch)
 
         if not local_branches_to_delete:
+            self._messenger.tell_info('No local branches deleted.')
             return
 
         description = (f'You are about to delete {len(local_branches_to_delete)}'
@@ -178,12 +181,15 @@ class _DeleteMergedBranches:
             return
 
         self._git.delete_local_branches(local_branches_to_delete)
+        self._messenger.tell_info('{len(local_branches_to_delete)} local branch(es) deleted.')
 
     def _delete_remote_merged_branches_for(self, required_target_branches, remote_name,
                                            all_branch_names: Set[str]):
         if not all((f'{remote_name}/{branch_name}' in all_branch_names)
                    for branch_name in required_target_branches):
-            return  # we'd get errors and there is no way to satisfy all required merge targets
+            self._messenger.tell_info('Skipped remote {remote_name!r} '
+                                      'as it does not have all required branches.')
+            return
 
         candidate_branches = self._find_branches_merged_to_all_targets_using(
             partial(self._git.find_merged_remote_branches_for, remote_name),
@@ -192,6 +198,7 @@ class _DeleteMergedBranches:
             b for b in candidate_branches if b.startswith(f'{remote_name}/')]
 
         if not remote_branches_to_delete:
+            self._messenger.tell_info('No remote branches deleted.')
             return
 
         description = (f'You are about to delete {len(remote_branches_to_delete)} '
@@ -202,6 +209,54 @@ class _DeleteMergedBranches:
             return
 
         self._git.delete_remote_branches(remote_branches_to_delete, remote_name)
+        self._messenger.tell_info('{len(remote_branches_to_delete)} remote branch(es) deleted.')
+
+    def refresh_remotes(self, enabled_remotes):
+        sorted_remotes = sorted(set(enabled_remotes))
+        if not sorted_remotes:
+            return
+
+        description = (f'Do you want to run "git remote update --prune"'
+                       f' for {len(sorted_remotes)} remote(s):\n'
+                       + '\n'.join(f'  - {name}' for name in sorted_remotes)
+                       + '\n\nUpdate?')
+        if not self._confirmation.confirmed(description):
+            return
+
+        for remote_name in sorted_remotes:
+            self._git.update_and_prune_remote(remote_name)
+
+    def refresh_target_branches(self, required_target_branches):
+        sorted_branches = sorted(set(required_target_branches))
+        if not sorted_branches:
+            return
+
+        initial_branch = self._git.find_current_branch()
+        if initial_branch is None:
+            self._messenger.tell_info('Skipped refreshing branches because of detached HEAD.')
+            return
+
+        if self._git.has_uncommitted_changes():
+            self._messenger.tell_info('Skipped refreshing branches due to uncommitted changes.')
+            return
+
+        description = (f'Do you want to run "git pull --ff-only"'
+                       f' for {len(sorted_branches)} branches(s):\n'
+                       + '\n'.join(f'  - {name}' for name in sorted_branches)
+                       + '\n\nPull?')
+        if not self._confirmation.confirmed(description):
+            return
+
+        needs_a_switch_back = False
+        try:
+            for branch_name in sorted_branches:
+                if branch_name != initial_branch:
+                    self._git.checkout(branch_name)
+                    needs_a_switch_back = True
+                self._git.pull_ff_only()
+        finally:
+            if needs_a_switch_back:
+                self._git.checkout(initial_branch)
 
     def delete_merged_branches(self, required_target_branches, enabled_remotes):
         self._delete_local_merged_branches_for(required_target_branches)
@@ -242,7 +297,7 @@ class _DeleteMergedBranches:
                     & existing_remotes)
 
 
-def _parse_command_line(args=None):
+def _parse_command_line(colorize: bool, args=None):
     _EPILOG = dedent(f"""\
         Software libre licensed under GPL v3 or later.
         Brought to you by Sebastian Pipping <sebastian@pipping.org>.
@@ -253,10 +308,8 @@ def _parse_command_line(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    colorize = 'NO_COLOR' not in os.environ
     formatter_class = RawDescriptionHelpFormatter
     if colorize:
-        colorama.init()
         formatter_class = add_color_to_formatter_class(formatter_class)
 
     parser = argparse.ArgumentParser(prog='git-delete-merged-branches', add_help=False,
@@ -294,10 +347,10 @@ def _parse_command_line(args=None):
     return parser.parse_args(args)
 
 
-def _innermost_main(config):
-    git = Git(ask=config.ask, pretend=config.pretend, verbose=config.verbose)
-    confirmation = Confirmation(ask=config.ask)
-    dmb = _DeleteMergedBranches(git, confirmation)
+def _innermost_main(config, messenger):
+    git = Git(messenger, ask=config.ask, pretend=config.pretend, verbose=config.verbose)
+    confirmation = Confirmation(messenger, ask=config.ask)
+    dmb = _DeleteMergedBranches(git, messenger, confirmation)
 
     git_config = dmb.ensure_configured(config.force_reconfiguration)
     if config.force_reconfiguration:
@@ -307,22 +360,30 @@ def _innermost_main(config):
         git_config, config.required_target_branches)
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 
+    dmb.refresh_remotes(enabled_remotes)
+    dmb.refresh_target_branches(required_target_branches)
     dmb.delete_merged_branches(required_target_branches, enabled_remotes)
 
 
 def _inner_main():
-    config = _parse_command_line()
+    colorize = 'NO_COLOR' not in os.environ
+    if colorize:
+        colorama.init()
+
+    messenger = Messenger(colorize=colorize)
+
+    config = _parse_command_line(colorize=colorize)
     try:
-        _innermost_main(config)
+        _innermost_main(config, messenger)
     except CalledProcessError as e:
         # Produce more human-friendly output than str(e)
         message = f"Command '{' '.join(e.cmd)}' returned non-zero exit status {e.returncode}."
-        print(f'Error: {message}', file=sys.stderr)
+        messenger.tell_error(message)
         sys.exit(1)
     except Exception as e:
         if config.debug:
             traceback.print_exc()
-        print(f'Error: {e}', file=sys.stderr)
+        messenger.tell_error(str(e))
         sys.exit(1)
 
 

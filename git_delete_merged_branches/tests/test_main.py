@@ -12,5 +12,5 @@ from ..__main__ import _parse_command_line
 class HelpOutputTest(TestCase):
     def test_help(self):
         with patch.object(sys, 'stdout', StringIO()) as mock_stdout, self.assertRaises(SystemExit):
-            _parse_command_line(['--help'])
-        self.assertIn('usage:', mock_stdout.getvalue())
+            _parse_command_line(colorize=True, args=['--help'])
+        self.assertIn('usage', mock_stdout.getvalue())

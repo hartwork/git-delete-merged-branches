@@ -2,7 +2,6 @@
 # Licensed under GPL v3 or later
 
 import subprocess
-import sys
 from collections import OrderedDict
 from typing import List, Optional
 
@@ -10,7 +9,8 @@ from typing import List, Optional
 class Git:
     _GIT = 'git'
 
-    def __init__(self, ask, pretend, verbose):
+    def __init__(self, messenger, ask, pretend, verbose):
+        self._messenger = messenger
         self._ask = ask
         self._verbose = verbose
         self._pretend = pretend
@@ -18,9 +18,9 @@ class Git:
     def _subprocess_check_output(self, argv, is_write):
         pretend = is_write and self._pretend
         if self._verbose:
-            epilog = '   # skipped due to --pretend' if pretend else ''
+            comment = 'skipped due to --dry-run' if pretend else ''
             display_argv = [a for a in argv if not a.startswith('--format=')]
-            print(f'# {" ".join(display_argv)}{epilog}', file=sys.stderr)
+            self._messenger.tell_command(display_argv, comment)
         if pretend:
             return bytes()
         return subprocess.check_output(argv)
@@ -127,3 +127,27 @@ class Git:
             argv += [key, value]
 
         self._subprocess_check_output(argv, is_write=True)
+
+    def update_and_prune_remote(self, remote_name: str) -> None:
+        argv = [self._GIT, 'remote', 'update', '--prune', remote_name]
+        self._subprocess_check_output(argv, is_write=True)
+
+    def checkout(self, branch_name: str) -> None:
+        argv = [self._GIT, 'checkout', branch_name]
+        self._subprocess_check_output(argv, is_write=True)
+
+    def pull_ff_only(self) -> None:
+        argv = [self._GIT, 'pull', '--ff-only']
+        self._subprocess_check_output(argv, is_write=True)
+
+    def has_uncommitted_changes(self) -> bool:
+        try:
+            base_argv = [self._GIT, 'diff', '--exit-code', '--quiet', ]
+            for extra_argv in ([], ['--cached']):
+                argv = base_argv + extra_argv
+                self._subprocess_check_output(argv, is_write=False)
+            return False
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                return True
+            raise

@@ -139,3 +139,15 @@ class Git:
     def pull_ff_only(self) -> None:
         argv = [self._GIT, 'pull', '--ff-only']
         self._subprocess_check_output(argv, is_write=True)
+
+    def has_uncommitted_changes(self) -> bool:
+        try:
+            base_argv = [self._GIT, 'diff', '--exit-code', '--quiet', ]
+            for extra_argv in ([], ['--cached']):
+                argv = base_argv + extra_argv
+                self._subprocess_check_output(argv, is_write=False)
+            return False
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                return True
+            raise

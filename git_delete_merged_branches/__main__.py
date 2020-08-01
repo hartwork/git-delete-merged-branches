@@ -234,6 +234,10 @@ class _DeleteMergedBranches:
             self._messenger.tell_info('Skipped refreshing branches because of detached HEAD.')
             return
 
+        if self._git.has_uncommitted_changes():
+            self._messenger.tell_info('Skipped refreshing branches due to uncommitted changes.')
+            return
+
         description = (f'Do you want to run "git pull --ff-only"'
                        f' for {len(sorted_branches)} branches(s):\n'
                        + '\n'.join(f'  - {name}' for name in sorted_branches)

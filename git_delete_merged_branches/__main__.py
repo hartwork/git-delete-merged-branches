@@ -167,6 +167,8 @@ class _DeleteMergedBranches:
 
         current_branch = self._git.find_current_branch()
         if current_branch in local_branches_to_delete:
+            self._messenger.tell_info(f'Skipped branch {current_branch!r} '
+                                      'because it is currently checked out.')
             local_branches_to_delete.remove(current_branch)
 
         if not local_branches_to_delete:

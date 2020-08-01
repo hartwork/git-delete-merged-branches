@@ -343,7 +343,7 @@ def _parse_command_line(colorize: bool, args=None):
 
 def _innermost_main(config, messenger):
     git = Git(ask=config.ask, pretend=config.pretend, verbose=config.verbose)
-    confirmation = Confirmation(ask=config.ask)
+    confirmation = Confirmation(messenger, ask=config.ask)
     dmb = _DeleteMergedBranches(git, messenger, confirmation)
 
     git_config = dmb.ensure_configured(config.force_reconfiguration)

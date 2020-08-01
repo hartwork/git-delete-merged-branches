@@ -4,6 +4,7 @@
 import colorama
 
 _INFO_COLOR = colorama.Fore.WHITE + colorama.Style.BRIGHT
+_QUESTION_COLOR = colorama.Fore.GREEN + colorama.Style.BRIGHT
 _RESET_COLOR = colorama.Style.RESET_ALL
 
 
@@ -15,3 +16,8 @@ class Messenger:
         if self._colorize:
             message = f'{_INFO_COLOR}{message}{_RESET_COLOR}'
         print(message)
+
+    def format_question(self, message):
+        if self._colorize:
+            message = f'{_QUESTION_COLOR}{message}{_RESET_COLOR}'
+        return message

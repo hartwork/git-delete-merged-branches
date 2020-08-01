@@ -227,8 +227,7 @@ class _DeleteMergedBranches:
 
         initial_branch = self._git.find_current_branch()
         if initial_branch is None:
-            # we cannot easily checkout back to where we left off; let's not
-            # do things that need switching branches for now, then.
+            self._messenger.tell_info('Skipped refreshing branches because of detached HEAD.')
             return
 
         description = (f'Do you want to run "git pull --ff-only"'

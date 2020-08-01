@@ -8,13 +8,14 @@ from unittest.mock import patch
 from parameterized import parameterized
 
 from .._git import Git
+from .._messenger import Messenger
 
 
 class FindBranchesTest(TestCase):
     def test_find_branches_drops_head(self):
         existing_branches = ['remote1/HEAD', 'remote2/master']
         expected_branches = ['remote2/master']
-        git = Git(ask=False, pretend=True, verbose=False)
+        git = Git(Messenger(colorize=False), ask=False, pretend=True, verbose=False)
         command_output_to_inject = ('\n'.join(existing_branches) + '\n').encode('utf-8')
         assert isinstance(command_output_to_inject, bytes)
 

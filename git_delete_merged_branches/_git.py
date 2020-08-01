@@ -2,7 +2,6 @@
 # Licensed under GPL v3 or later
 
 import subprocess
-import sys
 from collections import OrderedDict
 from typing import List, Optional
 
@@ -10,7 +9,8 @@ from typing import List, Optional
 class Git:
     _GIT = 'git'
 
-    def __init__(self, ask, pretend, verbose):
+    def __init__(self, messenger, ask, pretend, verbose):
+        self._messenger = messenger
         self._ask = ask
         self._verbose = verbose
         self._pretend = pretend
@@ -18,9 +18,9 @@ class Git:
     def _subprocess_check_output(self, argv, is_write):
         pretend = is_write and self._pretend
         if self._verbose:
-            epilog = '   # skipped due to --dry-run' if pretend else ''
+            comment = 'skipped due to --dry-run' if pretend else ''
             display_argv = [a for a in argv if not a.startswith('--format=')]
-            print(f'# {" ".join(display_argv)}{epilog}', file=sys.stderr)
+            self._messenger.tell_command(display_argv, comment)
         if pretend:
             return bytes()
         return subprocess.check_output(argv)

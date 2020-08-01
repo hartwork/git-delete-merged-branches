@@ -131,3 +131,11 @@ class Git:
     def update_and_prune_remote(self, remote_name: str) -> None:
         argv = [self._GIT, 'remote', 'update', '--prune', remote_name]
         self._subprocess_check_output(argv, is_write=True)
+
+    def checkout(self, branch_name: str) -> None:
+        argv = [self._GIT, 'checkout', branch_name]
+        self._subprocess_check_output(argv, is_write=True)
+
+    def pull_ff_only(self) -> None:
+        argv = [self._GIT, 'pull', '--ff-only']
+        self._subprocess_check_output(argv, is_write=True)

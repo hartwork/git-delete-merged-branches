@@ -68,9 +68,13 @@ Here's what `git-delete-merged-branches` does for your safety:
 
 # Best Practices
 
-When the repository is a fork:
-- consider keeping your local `master` up to date (by making it a tracking branch or by using `git pull`).
-- consider keeping your fork's remote `master` up to date (using `git push`).
+When the repository is a fork
+(with an upstream remote and a fork remote):
+
+- Make sure that release branches are tracking the right remote,
+  e.g. `master` should probably track original upstream's `m̀aster`
+  rather than `master` of your fork.
+- Consider keeping your fork's remote `master` up to date (using `git push`).
 
 
 # Support

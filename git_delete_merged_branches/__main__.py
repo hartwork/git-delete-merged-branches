@@ -218,6 +218,35 @@ class _DeleteMergedBranches:
         for remote_name in sorted_remotes:
             self._git.update_and_prune_remote(remote_name)
 
+    def refresh_target_branches(self, required_target_branches):
+        sorted_branches = sorted(set(required_target_branches))
+        if not sorted_branches:
+            return
+
+        initial_branch = self._git.find_current_branch()
+        if initial_branch is None:
+            # we cannot easily checkout back to where we left off; let's not
+            # do things that need switching branches for now, then.
+            return
+
+        description = (f'Do you want to run "git pull --ff-only"'
+                       f' for {len(sorted_branches)} branches(s):\n'
+                       + '\n'.join(f'  - {name}' for name in sorted_branches)
+                       + '\n\nPull?')
+        if not self._confirmation.confirmed(description):
+            return
+
+        needs_a_switch_back = False
+        try:
+            for branch_name in sorted_branches:
+                if branch_name != initial_branch:
+                    self._git.checkout(branch_name)
+                    needs_a_switch_back = True
+                self._git.pull_ff_only()
+        finally:
+            if needs_a_switch_back:
+                self._git.checkout(initial_branch)
+
     def delete_merged_branches(self, required_target_branches, enabled_remotes):
         self._delete_local_merged_branches_for(required_target_branches)
         all_branch_names = set(self._git.find_all_branches())
@@ -323,6 +352,7 @@ def _innermost_main(config):
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 
     dmb.refresh_remotes(enabled_remotes)
+    dmb.refresh_target_branches(required_target_branches)
     dmb.delete_merged_branches(required_target_branches, enabled_remotes)
 
 

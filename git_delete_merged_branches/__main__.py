@@ -187,7 +187,9 @@ class _DeleteMergedBranches:
                                            all_branch_names: Set[str]):
         if not all((f'{remote_name}/{branch_name}' in all_branch_names)
                    for branch_name in required_target_branches):
-            return  # we'd get errors and there is no way to satisfy all required merge targets
+            self._messenger.tell_info('Skipped remote {remote_name!r} '
+                                      'as it does not have all required branches.')
+            return
 
         candidate_branches = self._find_branches_merged_to_all_targets_using(
             partial(self._git.find_merged_remote_branches_for, remote_name),

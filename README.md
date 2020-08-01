@@ -72,7 +72,7 @@ When the repository is a fork
 (with an upstream remote and a fork remote):
 
 - Make sure that release branches are tracking the right remote,
-  e.g. `master` should probably track original upstream's `m̀aster`
+  e.g. `master` should probably track original upstream's `master`
   rather than `master` of your fork.
 - Consider keeping your fork's remote `master` up to date (using `git push`).
 

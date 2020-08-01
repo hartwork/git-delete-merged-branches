@@ -6,6 +6,7 @@ import sys
 import colorama
 
 _INFO_COLOR = colorama.Fore.WHITE + colorama.Style.BRIGHT
+_ERROR_COLOR = colorama.Fore.RED + colorama.Style.BRIGHT
 _COMMAND_COLOR = colorama.Fore.CYAN
 _QUESTION_COLOR = colorama.Fore.GREEN + colorama.Style.BRIGHT
 _RESET_COLOR = colorama.Style.RESET_ALL
@@ -27,6 +28,12 @@ class Messenger:
             message = f'{_COMMAND_COLOR}{message}{_RESET_COLOR}'
         message += epilog
 
+        print(message, file=sys.stderr)
+
+    def tell_error(self, message):
+        message = f'Error: {message}'
+        if self._colorize:
+            message = f'{_ERROR_COLOR}{message}{_RESET_COLOR}'
         print(message, file=sys.stderr)
 
     def format_question(self, message):

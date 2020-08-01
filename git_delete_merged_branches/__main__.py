@@ -378,12 +378,12 @@ def _inner_main():
     except CalledProcessError as e:
         # Produce more human-friendly output than str(e)
         message = f"Command '{' '.join(e.cmd)}' returned non-zero exit status {e.returncode}."
-        print(f'Error: {message}', file=sys.stderr)
+        messenger.tell_error(message)
         sys.exit(1)
     except Exception as e:
         if config.debug:
             traceback.print_exc()
-        print(f'Error: {e}', file=sys.stderr)
+        messenger.tell_error(str(e))
         sys.exit(1)
 
 

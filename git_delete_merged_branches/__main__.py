@@ -153,16 +153,19 @@ class _DeleteMergedBranches:
                                                                remote_name: Optional[str]
                                                                ) -> Set[str]:
         if remote_name is None:
-            getter = self._git.find_merged_local_branches_for
+            find_branches_that_were_merged_into = self._git.find_merged_local_branches_for
         else:
-            getter = partial(self._git.find_merged_remote_branches_for, remote_name)
+            find_branches_that_were_merged_into = partial(
+                self._git.find_merged_remote_branches_for, remote_name)
 
         if len(required_target_branches) == 1:
             target_branch = next(iter(required_target_branches))
-            branches_merged_to_all_required_targets = set(getter(target_branch))
+            branches_merged_to_all_required_targets = set(
+                find_branches_that_were_merged_into(target_branch)
+            )
         else:
             branches_merged_to_all_required_targets = reduce(and_, (
-                set(getter(target_branch))
+                set(find_branches_that_were_merged_into(target_branch))
                 for target_branch in required_target_branches))
 
         return branches_merged_to_all_required_targets

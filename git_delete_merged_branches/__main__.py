@@ -149,9 +149,8 @@ class _DeleteMergedBranches:
     def find_enabled_remotes(cls, git_config):
         return cls._filter_git_config(git_config, cls._PATTERN_REMOTE_ENABLED)
 
-    def _find_branches_merged_to_all_targets_for_single_remote(self, required_target_branches,
-                                                               remote_name: Optional[str]
-                                                               ) -> Set[str]:
+    def _find_branches_merged_using_git_branch_merged(self, required_target_branches,
+                                                      remote_name: Optional[str]) -> Set[str]:
         if remote_name is None:
             find_branches_that_were_merged_into = self._git.find_merged_local_branches_for
         else:
@@ -168,6 +167,15 @@ class _DeleteMergedBranches:
                 set(find_branches_that_were_merged_into(target_branch))
                 for target_branch in required_target_branches))
 
+        return branches_merged_to_all_required_targets
+
+    def _find_branches_merged_to_all_targets_for_single_remote(self, required_target_branches,
+                                                               remote_name: Optional[str]
+                                                               ) -> Set[str]:
+        branches_merged_to_all_required_targets = (
+            self._find_branches_merged_using_git_branch_merged(required_target_branches,
+                                                               remote_name=remote_name)
+        )
         return branches_merged_to_all_required_targets
 
     def _delete_local_merged_branches_for(self, required_target_branches):

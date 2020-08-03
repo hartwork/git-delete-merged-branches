@@ -67,6 +67,11 @@ class Git:
     def find_all_branches(self) -> List[str]:
         return self._find_branches(['--all'])
 
+    def find_remote_branches_at(self, remote_name) -> List[str]:
+        assert remote_name
+        extra_argv = ['--remote', '--list', f'{remote_name}/*']
+        return self._find_branches(extra_argv)
+
     def find_current_branch(self) -> Optional[str]:
         branch_names = self._find_branches(['--show-current'])
         if not branch_names:
@@ -151,3 +156,8 @@ class Git:
             if e.returncode == 1:
                 return True
             raise
+
+    def cherry(self, target_branch, topic_branch) -> List[str]:
+        argv = [self._GIT, 'cherry', target_branch, topic_branch]
+        output_bytes = self._subprocess_check_output(argv, is_write=False)
+        return self._output_bytes_to_lines(output_bytes)

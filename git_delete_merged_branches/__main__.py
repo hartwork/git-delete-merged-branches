@@ -12,7 +12,7 @@ from operator import and_
 from signal import SIGINT
 from subprocess import CalledProcessError
 from textwrap import dedent
-from typing import List, Set
+from typing import List, Optional, Set
 
 import colorama
 
@@ -149,9 +149,14 @@ class _DeleteMergedBranches:
     def find_enabled_remotes(cls, git_config):
         return cls._filter_git_config(git_config, cls._PATTERN_REMOTE_ENABLED)
 
-    @classmethod
-    def _find_branches_merged_to_all_targets_using(cls, getter,
-                                                   required_target_branches) -> Set[str]:
+    def _find_branches_merged_to_all_targets_for_single_remote(self, required_target_branches,
+                                                               remote_name: Optional[str]
+                                                               ) -> Set[str]:
+        if remote_name is None:
+            getter = self._git.find_merged_local_branches_for
+        else:
+            getter = partial(self._git.find_merged_remote_branches_for, remote_name)
+
         if len(required_target_branches) == 1:
             target_branch = next(iter(required_target_branches))
             branches_merged_to_all_required_targets = set(getter(target_branch))
@@ -159,11 +164,12 @@ class _DeleteMergedBranches:
             branches_merged_to_all_required_targets = reduce(and_, (
                 set(getter(target_branch))
                 for target_branch in required_target_branches))
+
         return branches_merged_to_all_required_targets
 
     def _delete_local_merged_branches_for(self, required_target_branches):
-        local_branches_to_delete = self._find_branches_merged_to_all_targets_using(
-            self._git.find_merged_local_branches_for, required_target_branches)
+        local_branches_to_delete = self._find_branches_merged_to_all_targets_for_single_remote(
+            required_target_branches, remote_name=None)
 
         current_branch = self._git.find_current_branch()
         if current_branch in local_branches_to_delete:
@@ -193,9 +199,8 @@ class _DeleteMergedBranches:
                                       'as it does not have all required branches.')
             return
 
-        candidate_branches = self._find_branches_merged_to_all_targets_using(
-            partial(self._git.find_merged_remote_branches_for, remote_name),
-            required_target_branches)
+        candidate_branches = self._find_branches_merged_to_all_targets_for_single_remote(
+            required_target_branches, remote_name=remote_name)
         remote_branches_to_delete = [
             b for b in candidate_branches if b.startswith(f'{remote_name}/')]
 

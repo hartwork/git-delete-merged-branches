@@ -12,7 +12,7 @@ from operator import and_
 from signal import SIGINT
 from subprocess import CalledProcessError
 from textwrap import dedent
-from typing import List, Set
+from typing import List, Optional, Set
 
 import colorama
 
@@ -64,10 +64,11 @@ class _DeleteMergedBranches:
     _FORMAT_REMOTE_ENABLED = 'remote.{name}.dmb-enabled'
     _FORMAT_BRANCH_REQUIRED = 'branch.{name}.dmb-required'
 
-    def __init__(self, git, messenger, confirmation):
+    def __init__(self, git, messenger, confirmation, effort_level):
         self._confirmation = confirmation
         self._messenger = messenger
         self._git = git
+        self._effort_using_git_cherry = effort_level >= 2
 
     def _interactively_edit_list(self, description, valid_names, old_names, format,
                                  min_selection_count):
@@ -149,21 +150,75 @@ class _DeleteMergedBranches:
     def find_enabled_remotes(cls, git_config):
         return cls._filter_git_config(git_config, cls._PATTERN_REMOTE_ENABLED)
 
-    @classmethod
-    def _find_branches_merged_to_all_targets_using(cls, getter,
-                                                   required_target_branches) -> Set[str]:
+    def _find_branches_merged_using_git_branch_merged(self, required_target_branches,
+                                                      remote_name: Optional[str]) -> Set[str]:
+        if remote_name is None:
+            find_branches_that_were_merged_into = self._git.find_merged_local_branches_for
+        else:
+            find_branches_that_were_merged_into = partial(
+                self._git.find_merged_remote_branches_for, remote_name)
+
         if len(required_target_branches) == 1:
             target_branch = next(iter(required_target_branches))
-            branches_merged_to_all_required_targets = set(getter(target_branch))
+            branches_merged_to_all_required_targets = set(
+                find_branches_that_were_merged_into(target_branch)
+            )
         else:
             branches_merged_to_all_required_targets = reduce(and_, (
-                set(getter(target_branch))
+                set(find_branches_that_were_merged_into(target_branch))
                 for target_branch in required_target_branches))
+
+        return branches_merged_to_all_required_targets
+
+    def _find_branches_merged_using_git_cherry(self, required_target_branches,
+                                               candidate_branches) -> Set[str]:
+        assert required_target_branches
+
+        if not candidate_branches:
+            return set()
+
+        branches_merged_to_all_required_targets = set()
+
+        for topic_branch in sorted(candidate_branches):
+            assert topic_branch not in required_target_branches
+
+            for target_branch in sorted(required_target_branches):
+                cherry_lines = self._git.cherry(target_branch, topic_branch)
+                defacto_merged_into_target = all(line.startswith('-') for line in cherry_lines)
+                if not defacto_merged_into_target:
+                    break
+            else:  # i.e. no break happened above
+                branches_merged_to_all_required_targets.add(topic_branch)
+
+        return branches_merged_to_all_required_targets
+
+    def _find_branches_merged_to_all_targets_for_single_remote(self, required_target_branches,
+                                                               remote_name: Optional[str]
+                                                               ) -> Set[str]:
+        branches_merged_to_all_required_targets = (
+            self._find_branches_merged_using_git_branch_merged(required_target_branches,
+                                                               remote_name=remote_name)
+        )
+
+        if self._effort_using_git_cherry:
+            if remote_name is None:
+                all_branches_at_remote = set(self._git.find_local_branches())
+            else:
+                all_branches_at_remote = set(self._git.find_remote_branches_at(remote_name))
+            if remote_name is not None:
+                required_target_branches = {f'{remote_name}/{branch_name}'
+                                            for branch_name in required_target_branches}
+            branches_to_inspect_using_git_cherry = (all_branches_at_remote
+                                                    - required_target_branches
+                                                    - branches_merged_to_all_required_targets)
+            branches_merged_to_all_required_targets |= self._find_branches_merged_using_git_cherry(
+                required_target_branches, branches_to_inspect_using_git_cherry)
+
         return branches_merged_to_all_required_targets
 
     def _delete_local_merged_branches_for(self, required_target_branches):
-        local_branches_to_delete = self._find_branches_merged_to_all_targets_using(
-            self._git.find_merged_local_branches_for, required_target_branches)
+        local_branches_to_delete = self._find_branches_merged_to_all_targets_for_single_remote(
+            required_target_branches, remote_name=None)
 
         current_branch = self._git.find_current_branch()
         if current_branch in local_branches_to_delete:
@@ -193,9 +248,8 @@ class _DeleteMergedBranches:
                                       'as it does not have all required branches.')
             return
 
-        candidate_branches = self._find_branches_merged_to_all_targets_using(
-            partial(self._git.find_merged_remote_branches_for, remote_name),
-            required_target_branches)
+        candidate_branches = self._find_branches_merged_to_all_targets_for_single_remote(
+            required_target_branches, remote_name=remote_name)
         remote_branches_to_delete = [
             b for b in candidate_branches if b.startswith(f'{remote_name}/')]
 
@@ -335,6 +389,11 @@ def _parse_command_line(colorize: bool, args=None):
                        default=[], action='append',
                        help='require the given branch as a merge target (instead of what is'
                             ' configured for this repository); can be passed multiple times')
+    rules.add_argument('--effort', metavar='LEVEL', dest='effort_level',
+                       type=int, default=2, choices=[1, 2],
+                       help='level of effort to put into finding merged branches; '
+                            'level 1 uses nothing but "git branch --merged", '
+                            'level 2 adds use of "git cherry"; (default level: %(default)d)')
 
     switches = parser.add_argument_group('flags')
     switches.add_argument('--debug', dest='debug', action='store_true',
@@ -352,7 +411,7 @@ def _parse_command_line(colorize: bool, args=None):
 def _innermost_main(config, messenger):
     git = Git(messenger, ask=config.ask, pretend=config.pretend, verbose=config.verbose)
     confirmation = Confirmation(messenger, ask=config.ask)
-    dmb = _DeleteMergedBranches(git, messenger, confirmation)
+    dmb = _DeleteMergedBranches(git, messenger, confirmation, config.effort_level)
 
     git_config = dmb.ensure_configured(config.force_reconfiguration)
     if config.force_reconfiguration:

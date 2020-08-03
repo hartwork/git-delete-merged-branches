@@ -45,6 +45,10 @@ To github.com:hartwork/wait-for-it.git
 # Features
 
 - Supports deletion of both local and remote branches
+- Detects certain forms of de-facto merges
+  (certain no-squash rebase merges as well as
+  certain single or range cherry-picks,
+  as recognized by `git cherry`)
 - Supports workflows with multiple release branches, e.g. only delete branches that have been merged to *all* of `master`, `dev`  and `staging`
 - Quick interactive configuration
 - Provider agnostic: Works with GitHub, GitLab and any other Git hosting

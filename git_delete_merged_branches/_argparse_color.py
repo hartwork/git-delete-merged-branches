@@ -16,7 +16,7 @@ _SUBSTITUTIONS = (
     ('^(.+):$', f'{_SECTION_COLOR}\\1{_RESET_COLOR}:'),
     ('(?<!\\w)(--?[a-z-]+) ([A-Z_]+)',
      f'{_ARGUMENT_COLOR}\\1{_RESET_COLOR} {_PARAMETER_COLOR}\\2{_RESET_COLOR}'),
-    ('(?<!\\w)(--?[a-z-]+)', f'{_ARGUMENT_COLOR}\\1{_RESET_COLOR}'),
+    ('(?<!\\w)((?!--?merged)--?[a-z-]+)', f'{_ARGUMENT_COLOR}\\1{_RESET_COLOR}'),
     ('^(usage): ([^ ]+)\\b',
      f'{_SECTION_COLOR}\\1{_RESET_COLOR}: {_PROG_COLOR}\\2{_RESET_COLOR}'),
     ('(https://[^ ]+[^ .])', f'{_URL_COLOR}\\1{_RESET_COLOR}'),

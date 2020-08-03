@@ -50,7 +50,7 @@ class Git:
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         return self._output_bytes_to_lines(output_bytes)
 
-    def _find_branches(self, extra_argv=None):
+    def _find_branches(self, extra_argv=None) -> List[str]:
         argv = [
             self._GIT,
             'branch', '--format=%(refname:lstrip=2)',
@@ -61,10 +61,10 @@ class Git:
         lines = self._output_bytes_to_lines(output_bytes)
         return [line for line in lines if not line.endswith('/HEAD')]
 
-    def find_local_branches(self):
+    def find_local_branches(self) -> List[str]:
         return self._find_branches()
 
-    def find_all_branches(self):
+    def find_all_branches(self) -> List[str]:
         return self._find_branches(['--all'])
 
     def find_current_branch(self) -> Optional[str]:

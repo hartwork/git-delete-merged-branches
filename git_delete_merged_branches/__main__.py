@@ -12,7 +12,7 @@ from operator import and_
 from signal import SIGINT
 from subprocess import CalledProcessError
 from textwrap import dedent
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple
 
 import colorama
 
@@ -194,8 +194,8 @@ class _DeleteMergedBranches:
 
     def _find_branches_merged_to_all_targets_for_single_remote(self, required_target_branches,
                                                                remote_name: Optional[str]
-                                                               ) -> Set[str]:
-        branches_merged_to_all_required_targets = (
+                                                               ) -> Tuple[Set[str], Set[str]]:
+        truly_merged_branches = (
             self._find_branches_merged_using_git_branch_merged(required_target_branches,
                                                                remote_name=remote_name)
         )
@@ -210,21 +210,27 @@ class _DeleteMergedBranches:
                                             for branch_name in required_target_branches}
             branches_to_inspect_using_git_cherry = (all_branches_at_remote
                                                     - required_target_branches
-                                                    - branches_merged_to_all_required_targets)
-            branches_merged_to_all_required_targets |= self._find_branches_merged_using_git_cherry(
+                                                    - truly_merged_branches)
+            defacto_merged_branches = self._find_branches_merged_using_git_cherry(
                 required_target_branches, branches_to_inspect_using_git_cherry)
+        else:
+            defacto_merged_branches = set()
 
-        return branches_merged_to_all_required_targets
+        return (truly_merged_branches, defacto_merged_branches)
 
     def _delete_local_merged_branches_for(self, required_target_branches):
-        local_branches_to_delete = self._find_branches_merged_to_all_targets_for_single_remote(
-            required_target_branches, remote_name=None)
+        truly_merged, defacto_merged = (
+            self._find_branches_merged_to_all_targets_for_single_remote(
+                required_target_branches, remote_name=None))
 
         current_branch = self._git.find_current_branch()
-        if current_branch in local_branches_to_delete:
-            self._messenger.tell_info(f'Skipped branch {current_branch!r} '
-                                      'because it is currently checked out.')
-            local_branches_to_delete.remove(current_branch)
+        for branches_to_delete in (truly_merged, defacto_merged):
+            if current_branch in branches_to_delete:
+                self._messenger.tell_info(f'Skipped branch {current_branch!r} '
+                                          'because it is currently checked out.')
+                branches_to_delete.remove(current_branch)
+
+        local_branches_to_delete = truly_merged | defacto_merged
 
         if not local_branches_to_delete:
             self._messenger.tell_info('No local branches deleted.')
@@ -237,7 +243,9 @@ class _DeleteMergedBranches:
         if not self._confirmation.confirmed(description):
             return
 
-        self._git.delete_local_branches(local_branches_to_delete)
+        self._git.delete_local_branches(truly_merged)
+        self._git.delete_local_branches(defacto_merged, force=True)
+
         self._messenger.tell_info(f'{len(local_branches_to_delete)} local branch(es) deleted.')
 
     def _delete_remote_merged_branches_for(self, required_target_branches, remote_name,
@@ -248,10 +256,10 @@ class _DeleteMergedBranches:
                                       'as it does not have all required branches.')
             return
 
-        candidate_branches = self._find_branches_merged_to_all_targets_for_single_remote(
+        truly_merged, defacto_merged = self._find_branches_merged_to_all_targets_for_single_remote(
             required_target_branches, remote_name=remote_name)
         remote_branches_to_delete = [
-            b for b in candidate_branches if b.startswith(f'{remote_name}/')]
+            b for b in (truly_merged | defacto_merged) if b.startswith(f'{remote_name}/')]
 
         if not remote_branches_to_delete:
             self._messenger.tell_info('No remote branches deleted.')

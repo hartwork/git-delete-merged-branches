@@ -95,10 +95,15 @@ class Git:
     def find_merged_remote_branches_for(self, remote_name, branch_name):
         return self._get_merged_branches_for(f'{remote_name}/{branch_name}', remote=True)
 
-    def delete_local_branches(self, branch_names):
+    def delete_local_branches(self, branch_names, force=False):
         if not branch_names:
             return
-        argv = [self._GIT, 'branch', '--delete'] + list(branch_names)
+
+        argv = [self._GIT, 'branch', '--delete']
+        if force:
+            argv.append('--force')
+        argv += sorted(branch_names)
+
         self._subprocess_check_output(argv, is_write=True)
 
     def delete_remote_branches(self, branch_names, remote_name):

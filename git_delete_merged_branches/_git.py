@@ -73,11 +73,18 @@ class Git:
         return self._find_branches(extra_argv)
 
     def find_current_branch(self) -> Optional[str]:
-        branch_names = self._find_branches(['--show-current'])
-        if not branch_names:
-            return None
-        assert len(branch_names) == 1
-        return branch_names[0]
+        # Note: Avoiding "git branch --show-current" of Git >=2.22.0
+        #       to keep Git 2.17.1 of Ubuntu 18.04 in the boat, for now.
+        argv = ['git', 'rev-parse', '--symbolic-full-name', 'HEAD']
+        output_bytes = self._subprocess_check_output(argv, is_write=False)
+        lines = self._output_bytes_to_lines(output_bytes)
+        assert len(lines) == 1
+
+        expected_prefix = 'refs/heads/'
+        reference = lines[0]  # 'HEAD' when detached, else 'refs/heads/<branch>'
+        if not reference.startswith(expected_prefix):
+            return None  # detached head
+        return reference[len(expected_prefix):]
 
     def _get_merged_branches_for(self, target_branch: str, remote: bool):
         extra_argv = []

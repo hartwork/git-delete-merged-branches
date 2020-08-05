@@ -57,7 +57,7 @@ class _GitRepositoryWithoutBranches(_DmbException):
 
 
 class _DeleteMergedBranches:
-    _CONFIG_KEY_CONFIGURED = 'dmb.configured'
+    _CONFIG_KEY_CONFIGURED = 'delete-merged-branches.configured'
     _CONFIG_VALUE_TRUE = 'true'
     _PATTERN_REMOTE_ENABLED = '^remote.(?P<name>[^.]+).dmb-enabled$'
     _PATTERN_BRANCH_REQUIRED = '^branch.(?P<name>[^.]+).dmb-required$'

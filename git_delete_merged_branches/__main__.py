@@ -399,9 +399,10 @@ def _parse_command_line(colorize: bool, args=None):
                             ' configured for this repository); can be passed multiple times')
     rules.add_argument('--effort', metavar='LEVEL', dest='effort_level',
                        type=int, default=2, choices=[1, 2],
-                       help='level of effort to put into finding merged branches; '
-                            'level 1 uses nothing but "git branch --merged", '
-                            'level 2 adds use of "git cherry"; (default level: %(default)d)')
+                       help='level of effort to put into finding merged branches'
+                            '; level 1 uses nothing but "git branch --merged"'
+                            ', level 2 adds use of "git cherry"'
+                            '; (default level: %(default)d)')
 
     switches = parser.add_argument_group('flags')
     switches.add_argument('--debug', dest='debug', action='store_true',

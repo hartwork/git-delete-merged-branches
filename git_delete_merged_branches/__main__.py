@@ -402,7 +402,7 @@ def _parse_command_line(colorize: bool, args=None):
                        help='level of effort to put into finding merged branches'
                             '; level 1 uses nothing but "git branch --merged"'
                             ', level 2 adds use of "git cherry"'
-                            '; (default level: %(default)d)')
+                            ' (default level: %(default)d)')
 
     switches = parser.add_argument_group('flags')
     switches.add_argument('--debug', dest='debug', action='store_true',

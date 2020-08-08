@@ -150,8 +150,11 @@ class Git:
         argv = [self._GIT, 'remote', 'update', '--prune', remote_name]
         self._subprocess_check_output(argv, is_write=True)
 
-    def checkout(self, branch_name: str) -> None:
-        argv = [self._GIT, 'checkout', '-q', branch_name]
+    def checkout(self, committish: str, new_branch: Optional[str] = None) -> None:
+        argv = [self._GIT, 'checkout', '-q']
+        if new_branch is not None:
+            argv += ['-b', new_branch]
+        argv.append(committish)
         self._subprocess_check_output(argv, is_write=True)
 
     def pull_ff_only(self) -> None:

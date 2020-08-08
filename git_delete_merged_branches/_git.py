@@ -76,7 +76,7 @@ class Git:
     def find_current_branch(self) -> Optional[str]:
         # Note: Avoiding "git branch --show-current" of Git >=2.22.0
         #       to keep Git 2.17.1 of Ubuntu 18.04 in the boat, for now.
-        argv = ['git', 'rev-parse', '--symbolic-full-name', 'HEAD']
+        argv = [self._GIT, 'rev-parse', '--symbolic-full-name', 'HEAD']
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         lines = self._output_bytes_to_lines(output_bytes)
         assert len(lines) == 1

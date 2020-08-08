@@ -13,7 +13,7 @@ _URL_COLOR = colorama.Fore.MAGENTA + colorama.Style.BRIGHT
 _RESET_COLOR = colorama.Style.RESET_ALL
 
 _SUBSTITUTIONS = (
-    ('^(.+):$', f'{_SECTION_COLOR}\\1{_RESET_COLOR}:'),
+    ('^([^ ].+):$', f'{_SECTION_COLOR}\\1{_RESET_COLOR}:'),
     ('(?<!\\w)(--?[a-z-]+) ([A-Z_]+)',
      f'{_ARGUMENT_COLOR}\\1{_RESET_COLOR} {_PARAMETER_COLOR}\\2{_RESET_COLOR}'),
     ('(?<!\\w)((?!--?merged)--?[a-z-]+)', f'{_ARGUMENT_COLOR}\\1{_RESET_COLOR}'),

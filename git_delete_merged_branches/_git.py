@@ -186,3 +186,19 @@ class Git:
         argv = [self._GIT, 'cherry', target_branch, topic_branch]
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         return self._output_bytes_to_lines(output_bytes)
+
+    def commit(self, message: str) -> None:
+        argv = [self._GIT, 'commit', '-m', message]
+        self._subprocess_check_output(argv, is_write=True)
+
+    def merge_base(self, target_branch, topic_branch) -> str:
+        argv = [self._GIT, 'merge-base', target_branch, topic_branch]
+        output_bytes = self._subprocess_check_output(argv, is_write=False)
+        lines = self._output_bytes_to_lines(output_bytes)
+        assert len(lines) == 1
+        return lines[0]
+
+    def squash_merge(self, committish: str) -> None:
+        # NOTE: "git merge --squash <committish>" does not create a commit
+        argv = [self._GIT, 'merge', '--squash', committish]
+        self._subprocess_check_output(argv, is_write=True)

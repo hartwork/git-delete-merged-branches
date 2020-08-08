@@ -174,10 +174,13 @@ class Git:
                 return True
             raise
 
+    def has_staged_changes(self) -> bool:
+        return self._has_changes(['--cached'])
+
     def has_uncommitted_changes(self) -> bool:
         if self._has_changes():
             return True
-        return self._has_changes(['--cached'])
+        return self.has_staged_changes()
 
     def cherry(self, target_branch, topic_branch) -> List[str]:
         argv = [self._GIT, 'cherry', target_branch, topic_branch]

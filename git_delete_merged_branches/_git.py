@@ -161,17 +161,23 @@ class Git:
         argv = [self._GIT, 'pull', '--ff-only']
         self._subprocess_check_output(argv, is_write=True)
 
-    def has_uncommitted_changes(self) -> bool:
+    def _has_changes(self, extra_argv: Optional[List[str]] = None) -> bool:
+        argv = [self._GIT, 'diff', '--exit-code', '--quiet']
+        if extra_argv:
+            argv += extra_argv
+
         try:
-            base_argv = [self._GIT, 'diff', '--exit-code', '--quiet']
-            for extra_argv in ([], ['--cached']):
-                argv = base_argv + extra_argv
-                self._subprocess_check_output(argv, is_write=False)
+            self._subprocess_check_output(argv, is_write=False)
             return False
         except subprocess.CalledProcessError as e:
             if e.returncode == 1:
                 return True
             raise
+
+    def has_uncommitted_changes(self) -> bool:
+        if self._has_changes():
+            return True
+        return self._has_changes(['--cached'])
 
     def cherry(self, target_branch, topic_branch) -> List[str]:
         argv = [self._GIT, 'cherry', target_branch, topic_branch]

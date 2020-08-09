@@ -52,9 +52,10 @@ def run_script(content):
         subprocess.check_call(['bash', f.name])
 
 
-def create_git():
+def create_git(work_dir):
     messenger = Messenger(colorize=False)
-    return Git(messenger=messenger, ask=True, pretend=False, verbose=True)
+    return Git(messenger=messenger, ask=True, pretend=False, verbose=True,
+               work_dir=work_dir)
 
 
 def create_dmb(git, effort_level):
@@ -88,7 +89,7 @@ class MergeDetectionTest(TestCase):
         """)
         with TemporaryDirectory() as d, cd(d):
             run_script(setup_script)
-            git = create_git()
+            git = create_git(d)
             dmb = create_dmb(git, effort_level=1)
             self.assertEqual(git.find_local_branches(),
                              ['master', 'merged1', 'merged2', 'not-merged1'])
@@ -144,7 +145,7 @@ class MergeDetectionTest(TestCase):
         """)
         with TemporaryDirectory() as d, cd(d):
             run_script(setup_script)
-            git = create_git()
+            git = create_git(d)
             dmb = create_dmb(git, effort_level=2)
             self.assertEqual(git.find_local_branches(),
                              ['defacto-merged1', 'defacto-merged2', 'master',
@@ -193,7 +194,7 @@ class MergeDetectionTest(TestCase):
         """)
         with TemporaryDirectory() as d, cd(d):
             run_script(setup_script)
-            git = create_git()
+            git = create_git(d)
             dmb = create_dmb(git, effort_level=3)
             self.assertEqual(git.find_local_branches(),
                              ['defacto-squash-merged1', 'defacto-squash-merged2',

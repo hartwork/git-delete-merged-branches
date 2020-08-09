@@ -1,9 +1,12 @@
 # Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under GPL v3 or later
 
+import os
 import subprocess
 from collections import OrderedDict
 from typing import List, Optional
+
+from git_delete_merged_branches._metadata import APP
 
 
 class Git:
@@ -16,7 +19,7 @@ class Git:
         self._pretend = pretend
         self._working_directory = work_dir
 
-    def _subprocess_check_output(self, argv, is_write):
+    def _subprocess_check_output(self, argv, is_write, env=None):
         pretend = is_write and self._pretend
         if self._verbose:
             comment = 'skipped due to --dry-run' if pretend else ''
@@ -24,7 +27,7 @@ class Git:
             self._messenger.tell_command(display_argv, comment)
         if pretend:
             return bytes()
-        return subprocess.check_output(argv, cwd=self._working_directory)
+        return subprocess.check_output(argv, cwd=self._working_directory, env=env)
 
     @classmethod
     def _output_bytes_to_lines(cls, output_bytes) -> List[str]:
@@ -190,7 +193,14 @@ class Git:
 
     def commit(self, message: str) -> None:
         argv = [self._GIT, 'commit', '-m', message]
-        self._subprocess_check_output(argv, is_write=True)
+        env = os.environ.copy()
+        env.update({
+            'GIT_AUTHOR_EMAIL': f'{APP}@localhost',
+            'GIT_AUTHOR_NAME': APP,
+            'GIT_COMMITTER_EMAIL': f'{APP}@localhost',
+            'GIT_COMMITTER_NAME': APP,
+        })
+        self._subprocess_check_output(argv, env=env, is_write=True)
 
     def merge_base(self, target_branch, topic_branch) -> str:
         argv = [self._GIT, 'merge-base', target_branch, topic_branch]

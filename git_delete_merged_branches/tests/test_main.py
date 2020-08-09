@@ -1,10 +1,8 @@
 # Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under GPL v3 or later
 
-import os
 import subprocess
 import sys
-from contextlib import contextmanager
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from textwrap import dedent
@@ -22,16 +20,6 @@ class HelpOutputTest(TestCase):
         with patch.object(sys, 'stdout', StringIO()) as mock_stdout, self.assertRaises(SystemExit):
             _parse_command_line(colorize=True, args=['--help'])
         self.assertIn('usage', mock_stdout.getvalue())
-
-
-@contextmanager
-def cd(path):
-    original_pwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(original_pwd)
 
 
 def run_script(content, cwd):
@@ -87,7 +75,7 @@ class MergeDetectionTest(TestCase):
             echo line3 >> file.txt
             git commit -a -m 'Add line 3'
         """)
-        with TemporaryDirectory() as d, cd(d):
+        with TemporaryDirectory() as d:
             run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=1)
@@ -143,7 +131,7 @@ class MergeDetectionTest(TestCase):
             git add file5.txt
             git commit -m 'Add file5.txt'
         """)
-        with TemporaryDirectory() as d, cd(d):
+        with TemporaryDirectory() as d:
             run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=2)
@@ -192,7 +180,7 @@ class MergeDetectionTest(TestCase):
             git checkout -b not-defacto-squash-merged1
             git revert --no-edit HEAD
         """)
-        with TemporaryDirectory() as d, cd(d):
+        with TemporaryDirectory() as d:
             run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=3)

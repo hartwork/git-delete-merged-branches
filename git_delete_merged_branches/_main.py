@@ -55,6 +55,7 @@ class DeleteMergedBranches:
         self._messenger = messenger
         self._git = git
         self._effort_using_git_cherry = effort_level >= 2
+        self._effort_using_squashed_copies = effort_level >= 3
 
     def _interactively_edit_list(self, description, valid_names, old_names, format,
                                  min_selection_count):
@@ -156,6 +157,41 @@ class DeleteMergedBranches:
 
         return branches_merged_to_all_required_targets
 
+    @staticmethod
+    def _create_branch_name_for_squashed_copy(topic_branch, target_branch):
+        return (f'temp/squashed-{topic_branch.replace("/", "-")}'
+                f'-vs-{target_branch.replace("/", "-")}')
+
+    def _has_been_squash_merged_into(self, target_branch, topic_branch, initial_branch) -> bool:
+        """
+        Tries to detect a squashed merge, i.e. where a single commit
+        on the target branch pulls in the sum of all commits
+        between the common merge base commit and the tip of the topic branch.
+
+        The implementation creates a temporary squashed copy of those commits
+        and then asks ``git cherry`` if that squashed commit has an equivalent
+        on the target branch.
+
+        The caller must make sure that we can safely changes branches,
+        e.g. the caller has to check that there are no uncommitted changes.
+        """
+        merge_base_commit_sha1 = self._git.merge_base(target_branch, topic_branch)
+        squashed_copy_branch_name = self._create_branch_name_for_squashed_copy(
+            topic_branch=topic_branch, target_branch=target_branch)
+        self._git.checkout(merge_base_commit_sha1, new_branch=squashed_copy_branch_name)
+        try:
+            self._git.squash_merge(topic_branch)
+            if self._git.has_staged_changes():
+                self._git.commit(message=f'Apply squashed copy of {topic_branch!r}')
+                cherry_lines = self._git.cherry(target_branch, squashed_copy_branch_name)
+                defacto_merged_into_target = all(line.startswith('-') for line in cherry_lines)
+            else:
+                defacto_merged_into_target = True
+            return defacto_merged_into_target
+        finally:
+            self._git.checkout(initial_branch)
+            self._git.delete_local_branches([squashed_copy_branch_name], force=True)
+
     def _find_branches_merged_using_git_cherry(self, required_target_branches,
                                                candidate_branches) -> Set[str]:
         assert required_target_branches
@@ -164,6 +200,7 @@ class DeleteMergedBranches:
             return set()
 
         branches_merged_to_all_required_targets = set()
+        candidates_for_squashed_merges = []
 
         for topic_branch in sorted(candidate_branches):
             assert topic_branch not in required_target_branches
@@ -172,9 +209,40 @@ class DeleteMergedBranches:
                 cherry_lines = self._git.cherry(target_branch, topic_branch)
                 defacto_merged_into_target = all(line.startswith('-') for line in cherry_lines)
                 if not defacto_merged_into_target:
+                    if len(cherry_lines) > 1:
+                        candidates_for_squashed_merges.append(topic_branch)
                     break
             else:  # i.e. no break happened above
                 branches_merged_to_all_required_targets.add(topic_branch)
+
+        if self._effort_using_squashed_copies:
+            check_for_squash_merges = True
+
+            if candidates_for_squashed_merges:
+                initial_branch = self._git.find_current_branch()
+                if initial_branch is None:
+                    self._messenger.tell_info(
+                        'Skipped further inspection of branches'
+                        ' because of detached HEAD.')
+                    check_for_squash_merges = False
+
+                if check_for_squash_merges:
+                    if self._git.has_uncommitted_changes():
+                        self._messenger.tell_info(
+                            'Skipped further inspection of branches'
+                            ' due to uncommitted changes.')
+                        check_for_squash_merges = False
+
+            if check_for_squash_merges:
+                for topic_branch in candidates_for_squashed_merges:
+                    for target_branch in sorted(required_target_branches):
+                        defacto_merged_into_target = self._has_been_squash_merged_into(
+                            target_branch=target_branch, topic_branch=topic_branch,
+                            initial_branch=initial_branch)
+                        if not defacto_merged_into_target:
+                            break
+                    else:  # i.e. no break happened above
+                        branches_merged_to_all_required_targets.add(topic_branch)
 
         return branches_merged_to_all_required_targets
 

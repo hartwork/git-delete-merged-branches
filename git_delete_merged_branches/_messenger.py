@@ -5,6 +5,8 @@ import sys
 
 import colorama
 
+from ._shell import escape_for_shell_display
+
 _INFO_COLOR = colorama.Fore.WHITE + colorama.Style.BRIGHT
 _ERROR_COLOR = colorama.Fore.RED + colorama.Style.BRIGHT
 _COMMAND_COLOR = colorama.Fore.CYAN
@@ -23,6 +25,7 @@ class Messenger:
 
     def tell_command(self, argv, comment):
         epilog = f'  # {comment}' if comment else ''
+        argv = [escape_for_shell_display(arg) for arg in argv]
         message = f'# {" ".join(argv)}'
         if self._colorize:
             message = f'{_COMMAND_COLOR}{message}{_RESET_COLOR}'

@@ -1,21 +1,25 @@
 # Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under GPL v3 or later
 
+import os
 import subprocess
 from collections import OrderedDict
 from typing import List, Optional
+
+from git_delete_merged_branches._metadata import APP
 
 
 class Git:
     _GIT = 'git'
 
-    def __init__(self, messenger, ask, pretend, verbose):
+    def __init__(self, messenger, ask, pretend, verbose, work_dir=None):
         self._messenger = messenger
         self._ask = ask
         self._verbose = verbose
         self._pretend = pretend
+        self._working_directory = work_dir
 
-    def _subprocess_check_output(self, argv, is_write):
+    def _subprocess_check_output(self, argv, is_write, env=None):
         pretend = is_write and self._pretend
         if self._verbose:
             comment = 'skipped due to --dry-run' if pretend else ''
@@ -23,7 +27,7 @@ class Git:
             self._messenger.tell_command(display_argv, comment)
         if pretend:
             return bytes()
-        return subprocess.check_output(argv)
+        return subprocess.check_output(argv, cwd=self._working_directory, env=env)
 
     @classmethod
     def _output_bytes_to_lines(cls, output_bytes) -> List[str]:
@@ -150,27 +154,62 @@ class Git:
         argv = [self._GIT, 'remote', 'update', '--prune', remote_name]
         self._subprocess_check_output(argv, is_write=True)
 
-    def checkout(self, branch_name: str) -> None:
-        argv = [self._GIT, 'checkout', '-q', branch_name]
+    def checkout(self, committish: str, new_branch: Optional[str] = None) -> None:
+        argv = [self._GIT, 'checkout', '-q']
+        if new_branch is not None:
+            argv += ['-b', new_branch]
+        argv.append(committish)
         self._subprocess_check_output(argv, is_write=True)
 
     def pull_ff_only(self) -> None:
         argv = [self._GIT, 'pull', '--ff-only']
         self._subprocess_check_output(argv, is_write=True)
 
-    def has_uncommitted_changes(self) -> bool:
+    def _has_changes(self, extra_argv: Optional[List[str]] = None) -> bool:
+        argv = [self._GIT, 'diff', '--exit-code', '--quiet']
+        if extra_argv:
+            argv += extra_argv
+
         try:
-            base_argv = [self._GIT, 'diff', '--exit-code', '--quiet']
-            for extra_argv in ([], ['--cached']):
-                argv = base_argv + extra_argv
-                self._subprocess_check_output(argv, is_write=False)
+            self._subprocess_check_output(argv, is_write=False)
             return False
         except subprocess.CalledProcessError as e:
             if e.returncode == 1:
                 return True
             raise
 
+    def has_staged_changes(self) -> bool:
+        return self._has_changes(['--cached'])
+
+    def has_uncommitted_changes(self) -> bool:
+        if self._has_changes():
+            return True
+        return self.has_staged_changes()
+
     def cherry(self, target_branch, topic_branch) -> List[str]:
         argv = [self._GIT, 'cherry', target_branch, topic_branch]
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         return self._output_bytes_to_lines(output_bytes)
+
+    def commit(self, message: str) -> None:
+        argv = [self._GIT, 'commit', '-m', message]
+        env = os.environ.copy()
+        env.update({
+            'GIT_AUTHOR_EMAIL': f'{APP}@localhost',
+            'GIT_AUTHOR_NAME': APP,
+            'GIT_COMMITTER_EMAIL': f'{APP}@localhost',
+            'GIT_COMMITTER_NAME': APP,
+        })
+        self._subprocess_check_output(argv, env=env, is_write=True)
+
+    def merge_base(self, target_branch, topic_branch) -> str:
+        argv = [self._GIT, 'merge-base', target_branch, topic_branch]
+        output_bytes = self._subprocess_check_output(argv, is_write=False)
+        lines = self._output_bytes_to_lines(output_bytes)
+        assert len(lines) == 1
+        return lines[0]
+
+    def squash_merge(self, committish: str) -> None:
+        # NOTE: "git merge --squash <committish>" does not create a commit
+        argv = [self._GIT, 'merge', '--squash', committish]
+        self._subprocess_check_output(argv, is_write=True)

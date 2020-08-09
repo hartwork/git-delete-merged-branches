@@ -9,11 +9,12 @@ from typing import List, Optional
 class Git:
     _GIT = 'git'
 
-    def __init__(self, messenger, ask, pretend, verbose):
+    def __init__(self, messenger, ask, pretend, verbose, work_dir=None):
         self._messenger = messenger
         self._ask = ask
         self._verbose = verbose
         self._pretend = pretend
+        self._working_directory = work_dir
 
     def _subprocess_check_output(self, argv, is_write):
         pretend = is_write and self._pretend
@@ -23,7 +24,7 @@ class Git:
             self._messenger.tell_command(display_argv, comment)
         if pretend:
             return bytes()
-        return subprocess.check_output(argv)
+        return subprocess.check_output(argv, cwd=self._working_directory)
 
     @classmethod
     def _output_bytes_to_lines(cls, output_bytes) -> List[str]:

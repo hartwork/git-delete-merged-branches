@@ -34,7 +34,7 @@ def cd(path):
         os.chdir(original_pwd)
 
 
-def run_script(content):
+def run_script(content, cwd):
     header = dedent("""\
         set -e
         set -x
@@ -49,7 +49,7 @@ def run_script(content):
         for text in (header, content):
             f.write(text.encode('utf-8'))
         f.flush()
-        subprocess.check_call(['bash', f.name])
+        subprocess.check_call(['bash', f.name], cwd=cwd)
 
 
 def create_git(work_dir):
@@ -88,7 +88,7 @@ class MergeDetectionTest(TestCase):
             git commit -a -m 'Add line 3'
         """)
         with TemporaryDirectory() as d, cd(d):
-            run_script(setup_script)
+            run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=1)
             self.assertEqual(git.find_local_branches(),
@@ -144,7 +144,7 @@ class MergeDetectionTest(TestCase):
             git commit -m 'Add file5.txt'
         """)
         with TemporaryDirectory() as d, cd(d):
-            run_script(setup_script)
+            run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=2)
             self.assertEqual(git.find_local_branches(),
@@ -193,7 +193,7 @@ class MergeDetectionTest(TestCase):
             git revert --no-edit HEAD
         """)
         with TemporaryDirectory() as d, cd(d):
-            run_script(setup_script)
+            run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=3)
             self.assertEqual(git.find_local_branches(),

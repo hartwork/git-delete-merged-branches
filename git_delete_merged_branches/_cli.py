@@ -63,6 +63,11 @@ def _parse_command_line(colorize: bool, args=None):
                        action='append',
                        help='process the given remote (instead of the remotes that are'
                             ' configured for this repository); can be passed multiple times')
+    scope.add_argument('--exclude', '-x', metavar='BRANCH', dest='excluded_branches',
+                       default=[], action='append',
+                       help='exclude the given branch from deletion'
+                            ' (instead of what is configured for this repository)'
+                            '; can be passed multiple times')
 
     switches = parser.add_argument_group('flags')
     switches.add_argument('--debug', dest='debug', action='store_true',
@@ -95,11 +100,13 @@ def _innermost_main(config, messenger):
 
     required_target_branches = dmb.determine_required_target_branches(
         git_config, config.required_target_branches)
+    excluded_branches = dmb.determine_excluded_branches(git_config,
+                                                        config.excluded_branches)
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 
     dmb.refresh_remotes(enabled_remotes)
     dmb.refresh_target_branches(required_target_branches)
-    dmb.delete_merged_branches(required_target_branches, enabled_remotes)
+    dmb.delete_merged_branches(required_target_branches, excluded_branches, enabled_remotes)
 
 
 def _inner_main():

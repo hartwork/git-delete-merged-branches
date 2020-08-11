@@ -84,7 +84,7 @@ class MergeDetectionTest(TestCase):
 
             truly_merged, defacto_merged = (
                 dmb._find_branches_merged_to_all_targets_for_single_remote(
-                    {'master'}, remote_name=None))
+                    {'master'}, set(), remote_name=None))
 
             self.assertEqual(truly_merged, {'merged1', 'merged2'})
             self.assertEqual(defacto_merged, set())
@@ -141,7 +141,7 @@ class MergeDetectionTest(TestCase):
 
             truly_merged, defacto_merged = (
                 dmb._find_branches_merged_to_all_targets_for_single_remote(
-                    {'master'}, remote_name=None))
+                    {'master'}, set(), remote_name=None))
 
             self.assertEqual(truly_merged, set())
             self.assertEqual(defacto_merged, {'defacto-merged1', 'defacto-merged2'})
@@ -191,7 +191,7 @@ class MergeDetectionTest(TestCase):
 
             truly_merged, defacto_merged = (
                 dmb._find_branches_merged_to_all_targets_for_single_remote(
-                    {'master'}, remote_name=None))
+                    {'master'}, set(), remote_name=None))
 
             self.assertEqual(truly_merged, set())
             self.assertEqual(defacto_merged, {'defacto-squash-merged1',

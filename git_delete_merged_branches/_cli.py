@@ -45,12 +45,6 @@ def _parse_command_line(colorize: bool, args=None):
     modes.add_argument('--help', '-h', action='help', help='show this help message and exit')
     modes.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
 
-    scope = parser.add_argument_group('scope')
-    scope.add_argument('--remote', '-r', metavar='REMOTE', dest='enabled_remotes', default=[],
-                       action='append',
-                       help='process the given remote (instead of the remotes that are'
-                            ' configured for this repository); can be passed multiple times')
-
     rules = parser.add_argument_group('rules')
     rules.add_argument('--branch', '-b', metavar='BRANCH', dest='required_target_branches',
                        default=[], action='append',
@@ -63,6 +57,17 @@ def _parse_command_line(colorize: bool, args=None):
                             ', level 2 adds use of "git cherry"'
                             ', level 3 adds use of "git cherry" on temporary squashed copies'
                             ' (default level: %(default)d)')
+
+    scope = parser.add_argument_group('scope')
+    scope.add_argument('--remote', '-r', metavar='REMOTE', dest='enabled_remotes', default=[],
+                       action='append',
+                       help='process the given remote (instead of the remotes that are'
+                            ' configured for this repository); can be passed multiple times')
+    scope.add_argument('--exclude', '-x', metavar='BRANCH', dest='excluded_branches',
+                       default=[], action='append',
+                       help='exclude the given branch from deletion'
+                            ' (instead of what is configured for this repository)'
+                            '; can be passed multiple times')
 
     switches = parser.add_argument_group('flags')
     switches.add_argument('--debug', dest='debug', action='store_true',
@@ -95,11 +100,13 @@ def _innermost_main(config, messenger):
 
     required_target_branches = dmb.determine_required_target_branches(
         git_config, config.required_target_branches)
+    excluded_branches = dmb.determine_excluded_branches(git_config,
+                                                        config.excluded_branches)
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 
     dmb.refresh_remotes(enabled_remotes)
     dmb.refresh_target_branches(required_target_branches)
-    dmb.delete_merged_branches(required_target_branches, enabled_remotes)
+    dmb.delete_merged_branches(required_target_branches, excluded_branches, enabled_remotes)
 
 
 def _inner_main():

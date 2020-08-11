@@ -6,7 +6,7 @@ import subprocess
 from collections import OrderedDict
 from typing import List, Optional
 
-from git_delete_merged_branches._metadata import APP
+from ._metadata import APP
 
 
 class Git:

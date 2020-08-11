@@ -44,6 +44,7 @@ class _ZeroMergeTargetsException(_DmbException):
 
 class DeleteMergedBranches:
     _CONFIG_KEY_CONFIGURED = 'delete-merged-branches.configured'
+    _CONFIG_VALUE_CONFIGURED = '5.0.0+'  # i.e. most ancient version with compatible config
     _CONFIG_VALUE_TRUE = 'true'
     _PATTERN_REMOTE_ENABLED = '^remote.(?P<name>[^.]+).dmb-enabled$'
     _PATTERN_BRANCH_REQUIRED = '^branch.(?P<name>[^.]+).dmb-required$'
@@ -105,11 +106,11 @@ class DeleteMergedBranches:
     def _configure(self, git_config):
         self._configure_required_branches(git_config)
         self._configure_enabled_remotes(git_config)
-        self._git.set_config(self._CONFIG_KEY_CONFIGURED, self._CONFIG_VALUE_TRUE)
+        self._git.set_config(self._CONFIG_KEY_CONFIGURED, self._CONFIG_VALUE_CONFIGURED)
 
     @classmethod
     def _is_configured(cls, git_config):
-        return git_config.get(cls._CONFIG_KEY_CONFIGURED) == cls._CONFIG_VALUE_TRUE
+        return git_config.get(cls._CONFIG_KEY_CONFIGURED) == cls._CONFIG_VALUE_CONFIGURED
 
     def ensure_configured(self, force_reconfiguration):
         git_config = self._git.extract_git_config()

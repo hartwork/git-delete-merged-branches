@@ -393,7 +393,7 @@ class DeleteMergedBranches:
                 raise _NoSuchBranchException(required_target_branches[0])
         else:
             required_target_branches_set = (
-                set(DeleteMergedBranches.find_required_branches(git_config))
+                set(self.find_required_branches(git_config))
                 & existing_branches
             )
 
@@ -411,5 +411,5 @@ class DeleteMergedBranches:
                 raise _NoSuchRemoteException(enabled_remotes[0])
             return enabled_remotes_set
         else:
-            return (set(DeleteMergedBranches.find_enabled_remotes(git_config))
+            return (set(self.find_enabled_remotes(git_config))
                     & existing_remotes)

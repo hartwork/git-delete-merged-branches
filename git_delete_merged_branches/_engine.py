@@ -299,16 +299,18 @@ class DeleteMergedBranches:
         return (truly_merged_branches, defacto_merged_branches)
 
     def _delete_local_merged_branches_for(self, required_target_branches, excluded_branches):
+        current_branch = self._git.find_current_branch()
+        current_branch_would_be_analyzed = (current_branch is not None
+                                            and current_branch not in required_target_branches
+                                            and current_branch not in excluded_branches)
+        if current_branch_would_be_analyzed:
+            excluded_branches = excluded_branches | {current_branch}
+            self._messenger.tell_info(f'Skipped branch {current_branch!r} '
+                                      'because it is currently checked out.')
+
         truly_merged, defacto_merged = (
             self._find_branches_merged_to_all_targets_for_single_remote(
                 required_target_branches, excluded_branches, remote_name=None))
-
-        current_branch = self._git.find_current_branch()
-        for branches_to_delete in (truly_merged, defacto_merged):
-            if current_branch in branches_to_delete:
-                self._messenger.tell_info(f'Skipped branch {current_branch!r} '
-                                          'because it is currently checked out.')
-                branches_to_delete.remove(current_branch)
 
         local_branches_to_delete = truly_merged | defacto_merged
 

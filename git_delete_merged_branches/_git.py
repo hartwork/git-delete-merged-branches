@@ -199,7 +199,7 @@ class Git:
         return self._output_bytes_to_lines(output_bytes)
 
     def commit(self, message: str) -> None:
-        argv = [self._GIT, 'commit', '-m', message]
+        argv = [self._GIT, 'commit', '--no-verify', '-m', message]
         env = os.environ.copy()
         env.update(self._COMMIT_ENVIRON)
         self._subprocess_check_output(argv, env=env, is_write=True)

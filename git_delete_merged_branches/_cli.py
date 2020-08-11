@@ -14,8 +14,8 @@ import colorama
 
 from ._argparse_color import add_color_to_formatter_class
 from ._confirm import Confirmation
+from ._engine import DeleteMergedBranches
 from ._git import Git
-from ._main import DeleteMergedBranches
 from ._messenger import Messenger
 from ._metadata import APP, DESCRIPTION, VERSION
 

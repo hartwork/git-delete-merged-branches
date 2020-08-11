@@ -10,8 +10,8 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from .._cli import _parse_command_line
+from .._engine import DeleteMergedBranches
 from .._git import Git
-from .._main import DeleteMergedBranches
 from .._messenger import Messenger
 
 

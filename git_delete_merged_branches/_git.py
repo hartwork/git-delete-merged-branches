@@ -12,6 +12,13 @@ from git_delete_merged_branches._metadata import APP
 class Git:
     _GIT = 'git'
 
+    _COMMIT_ENVIRON = {
+        'GIT_AUTHOR_EMAIL': f'{APP}@localhost',
+        'GIT_AUTHOR_NAME': APP,
+        'GIT_COMMITTER_EMAIL': f'{APP}@localhost',
+        'GIT_COMMITTER_NAME': APP,
+    }
+
     def __init__(self, messenger, ask, pretend, verbose, work_dir=None):
         self._messenger = messenger
         self._ask = ask
@@ -194,12 +201,7 @@ class Git:
     def commit(self, message: str) -> None:
         argv = [self._GIT, 'commit', '-m', message]
         env = os.environ.copy()
-        env.update({
-            'GIT_AUTHOR_EMAIL': f'{APP}@localhost',
-            'GIT_AUTHOR_NAME': APP,
-            'GIT_COMMITTER_EMAIL': f'{APP}@localhost',
-            'GIT_COMMITTER_NAME': APP,
-        })
+        env.update(self._COMMIT_ENVIRON)
         self._subprocess_check_output(argv, env=env, is_write=True)
 
     def merge_base(self, target_branch, topic_branch) -> str:

@@ -9,7 +9,7 @@ from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import patch
 
-from ..__main__ import _parse_command_line
+from .._cli import _parse_command_line
 from .._git import Git
 from .._main import DeleteMergedBranches
 from .._messenger import Messenger

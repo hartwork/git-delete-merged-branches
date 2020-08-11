@@ -45,12 +45,6 @@ def _parse_command_line(colorize: bool, args=None):
     modes.add_argument('--help', '-h', action='help', help='show this help message and exit')
     modes.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
 
-    scope = parser.add_argument_group('scope')
-    scope.add_argument('--remote', '-r', metavar='REMOTE', dest='enabled_remotes', default=[],
-                       action='append',
-                       help='process the given remote (instead of the remotes that are'
-                            ' configured for this repository); can be passed multiple times')
-
     rules = parser.add_argument_group('rules')
     rules.add_argument('--branch', '-b', metavar='BRANCH', dest='required_target_branches',
                        default=[], action='append',
@@ -63,6 +57,12 @@ def _parse_command_line(colorize: bool, args=None):
                             ', level 2 adds use of "git cherry"'
                             ', level 3 adds use of "git cherry" on temporary squashed copies'
                             ' (default level: %(default)d)')
+
+    scope = parser.add_argument_group('scope')
+    scope.add_argument('--remote', '-r', metavar='REMOTE', dest='enabled_remotes', default=[],
+                       action='append',
+                       help='process the given remote (instead of the remotes that are'
+                            ' configured for this repository); can be passed multiple times')
 
     switches = parser.add_argument_group('flags')
     switches.add_argument('--debug', dest='debug', action='store_true',

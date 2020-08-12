@@ -16,8 +16,13 @@ class Confirmation:
 
         question = self._messenger.format_question(question)
 
+        self._messenger.produce_air()
+
         while True:
             reply = input(f'{question} [y/N] ')
             if reply in self._CONFIRM_KNOWN:
                 break
+
+        self._messenger.request_air(question)
+
         return reply in self._CONFIRM_GOOD

@@ -198,6 +198,10 @@ class Git:
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         return self._output_bytes_to_lines(output_bytes)
 
+    def has_unpushed_commits_on(self, branch, with_regard_to):
+        cherry_lines = self.cherry(with_regard_to, branch)
+        return any(line.startswith('+') for line in cherry_lines)
+
     def commit(self, message: str) -> None:
         argv = [self._GIT, 'commit', '--no-verify', '-m', message]
         env = os.environ.copy()

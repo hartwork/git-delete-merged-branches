@@ -105,6 +105,7 @@ def _innermost_main(config, messenger):
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 
     dmb.refresh_remotes(enabled_remotes)
+    dmb.detect_stale_remotes(enabled_remotes, required_target_branches)
     dmb.refresh_target_branches(required_target_branches)
     dmb.delete_merged_branches(required_target_branches, excluded_branches, enabled_remotes)
 

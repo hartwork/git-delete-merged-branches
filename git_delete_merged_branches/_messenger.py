@@ -18,12 +18,31 @@ class Messenger:
     def __init__(self, colorize):
         self._colorize = colorize
 
+        # Multi-line block of text should by separated from consecutive output (if any)
+        # by a blank line to give it some "air".  This flag is a tiny state machine.
+        self._air_needed = False
+
+    def produce_air(self):
+        if self._air_needed:
+            print()
+            self._air_needed = False
+
+    def request_air(self, future_message):
+        if '\n' in future_message:
+            self._air_needed = True
+
+    def _produce_and_request_air(self, future_message):
+        self.produce_air()
+        self.request_air(future_message)
+
     def tell_info(self, message):
+        self._produce_and_request_air(message)
         if self._colorize:
             message = f'{_INFO_COLOR}{message}{_RESET_COLOR}'
         print(message)
 
     def tell_command(self, argv, comment):
+        self._produce_and_request_air('')
         epilog = f'  # {comment}' if comment else ''
         argv = [escape_for_shell_display(arg) for arg in argv]
         message = f'# {" ".join(argv)}'
@@ -34,6 +53,7 @@ class Messenger:
         print(message, file=sys.stderr)
 
     def tell_error(self, message):
+        self._produce_and_request_air(message)
         message = f'Error: {message}'
         if self._colorize:
             message = f'{_ERROR_COLOR}{message}{_RESET_COLOR}'

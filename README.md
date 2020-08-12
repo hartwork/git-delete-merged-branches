@@ -18,10 +18,12 @@ Do you want to run "git remote update --prune" for 1 remote(s):
   - origin
 
 Update? [y/N] y
+
 Do you want to run "git pull --ff-only" for 1 branches(s):
   - master
 
 Pull? [y/N] y
+
 You are about to delete 6 local branch(es):
   - improve-setup-py
   - issue-12-enable-ci-for-pull-requests
@@ -31,6 +33,7 @@ You are about to delete 6 local branch(es):
   - simple-ci
 
 Delete? [y/N] y
+
 6 local branch(es) deleted.
 You are about to delete 6 remote branch(es):
   - origin/improve-setup-py
@@ -48,6 +51,7 @@ To github.com:hartwork/wait-for-it.git
  - [deleted]         keep-github-actions-up-to-date
  - [deleted]         refactoring-one
  - [deleted]         simple-ci
+
 6 remote branch(es) deleted.
 ```
 

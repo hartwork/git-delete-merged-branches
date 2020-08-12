@@ -372,6 +372,36 @@ class DeleteMergedBranches:
         for remote_name in sorted_remotes:
             self._git.update_and_prune_remote(remote_name)
 
+    def detect_stale_remotes(self, enabled_remotes, required_target_branches):
+        sorted_remotes = sorted(set(enabled_remotes))
+        if not sorted_remotes:
+            return
+
+        sorted_required_target_branches = sorted(set(required_target_branches))
+        assert sorted_required_target_branches
+
+        for remote_name in enabled_remotes:
+            remote_branches = set(self._git.find_remote_branches_at(remote_name))
+            not_fully_pushed_branches = [branch for branch in sorted_required_target_branches
+                                         if f'{remote_name}/{branch}' in remote_branches
+                                         and self._git.has_unpushed_commits_on(
+                                             branch,
+                                             with_regard_to=f'{remote_name}/{branch}')]
+
+            if not_fully_pushed_branches:
+                self._messenger.tell_info(f'Remote {remote_name!r} is not up to date with'
+                                          f' {len(not_fully_pushed_branches)} local'
+                                          ' branch(es):\n'
+                                          + '\n'.join(f'  - {branch}'
+                                                      for branch in not_fully_pushed_branches)
+                                          + '\n\nThis will likely impair detection'
+                                            f' of merged branches for remote {remote_name!r}.'
+                                            '\nPlease consider getting it back in sync'
+                                            ' by running\n'
+                                          + '\n'.join(f'  $ git push {remote_name} {branch}'
+                                                      for branch in not_fully_pushed_branches)
+                                          + f'\n\nand then invoking {APP}, again.')
+
     def refresh_target_branches(self, required_target_branches):
         sorted_branches = sorted(set(required_target_branches))
         if not sorted_branches:

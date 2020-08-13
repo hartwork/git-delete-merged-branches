@@ -167,11 +167,6 @@ class MergeDetectionTest(TestCase):
             git revert --no-edit HEAD
             git revert --no-edit HEAD  # i.e. revert the revert
 
-            # Create de-facto squash-merged branch: Empty diff
-            git checkout -b defacto-squash-merged3 defacto-squash-merged1
-            git revert --no-edit HEAD
-            git revert --no-edit HEAD~2
-
             git checkout master
             git merge --squash defacto-squash-merged1
             git commit -m "Add squashed copy of 'defacto-squash-merged1'"
@@ -186,8 +181,7 @@ class MergeDetectionTest(TestCase):
             dmb = create_dmb(git, effort_level=3)
             self.assertEqual(git.find_local_branches(),
                              ['defacto-squash-merged1', 'defacto-squash-merged2',
-                              'defacto-squash-merged3', 'master',
-                              'not-defacto-squash-merged1'])
+                              'master', 'not-defacto-squash-merged1'])
 
             truly_merged, defacto_merged = (
                 dmb._find_branches_merged_to_all_targets_for_single_remote(
@@ -195,5 +189,4 @@ class MergeDetectionTest(TestCase):
 
             self.assertEqual(truly_merged, set())
             self.assertEqual(defacto_merged, {'defacto-squash-merged1',
-                                              'defacto-squash-merged2',
-                                              'defacto-squash-merged3'})
+                                              'defacto-squash-merged2'})

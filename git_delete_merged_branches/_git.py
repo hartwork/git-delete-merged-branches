@@ -206,7 +206,11 @@ class Git:
         argv = [self._GIT, 'commit-tree', '-m', message, '-p', parent_committish, tree]
         env = os.environ.copy()
         env.update(self._COMMIT_ENVIRON)
-        output_bytes = self._subprocess_check_output(argv, env=env, is_write=True)
+        # Note: Command "git commit-tree" does write to the repository but it does
+        #       not switch branches, move HEAD or delete things; that's why it
+        #       it is considered "not writing" (``is_write=False``) here and
+        #       will be performed even when ``--dry-run``/``self._pretend`` is active.
+        output_bytes = self._subprocess_check_output(argv, env=env, is_write=False)
         lines = self._output_bytes_to_lines(output_bytes)
         assert len(lines) == 1
         return lines[0]

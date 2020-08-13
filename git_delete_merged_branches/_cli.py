@@ -83,13 +83,6 @@ def _parse_command_line(colorize: bool, args=None):
 
 
 def _innermost_main(config, messenger):
-    if config.pretend and config.effort_level >= 3:
-        raise ValueError(
-            f'Effort level {config.effort_level} cannot be combined with --dry-run'
-            ' due to the temporary branches'
-            ' that need to be created and deleted during analysis. Aborted.'
-        )
-
     git = Git(messenger, ask=config.ask, pretend=config.pretend, verbose=config.verbose)
     confirmation = Confirmation(messenger, ask=config.ask)
     dmb = DeleteMergedBranches(git, messenger, confirmation, config.effort_level)

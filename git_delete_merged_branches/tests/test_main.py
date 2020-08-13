@@ -173,7 +173,8 @@ class MergeDetectionTest(TestCase):
             git merge --squash defacto-squash-merged1
             git commit -m "Add squashed copy of 'defacto-squash-merged1'"
 
-            # Create not-defacto-squash-merged branch: Squashed commit with no counterpart
+            # Create not-defacto-squash-merged branch: Squashed copy commit
+            #                                          .. will not have a counterpart
             git checkout -b not-defacto-squash-merged1
             git revert --no-edit HEAD
         """)

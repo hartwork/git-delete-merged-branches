@@ -202,11 +202,14 @@ class Git:
         cherry_lines = self.cherry(with_regard_to, branch)
         return any(line.startswith('+') for line in cherry_lines)
 
-    def commit(self, message: str) -> None:
-        argv = [self._GIT, 'commit', '--no-verify', '-m', message]
+    def commit_tree(self, message: str, parent_committish: str, tree: str) -> str:
+        argv = [self._GIT, 'commit-tree', '-m', message, '-p', parent_committish, tree]
         env = os.environ.copy()
         env.update(self._COMMIT_ENVIRON)
-        self._subprocess_check_output(argv, env=env, is_write=True)
+        output_bytes = self._subprocess_check_output(argv, env=env, is_write=True)
+        lines = self._output_bytes_to_lines(output_bytes)
+        assert len(lines) == 1
+        return lines[0]
 
     def merge_base(self, target_branch, topic_branch) -> str:
         argv = [self._GIT, 'merge-base', target_branch, topic_branch]
@@ -214,8 +217,3 @@ class Git:
         lines = self._output_bytes_to_lines(output_bytes)
         assert len(lines) == 1
         return lines[0]
-
-    def squash_merge(self, committish: str) -> None:
-        # NOTE: "git merge --squash <committish>" does not create a commit
-        argv = [self._GIT, 'merge', '--squash', committish]
-        self._subprocess_check_output(argv, is_write=True)

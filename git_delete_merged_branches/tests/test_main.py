@@ -167,6 +167,8 @@ class MergeDetectionTest(TestCase):
             git revert --no-edit HEAD
             git revert --no-edit HEAD  # i.e. revert the revert
 
+            # Get the a squashed commit on master that will make
+            # branches defacto-squash-merged{1,2} be detected as de-facto merged
             git checkout master
             git merge --squash defacto-squash-merged1
             git commit -m "Add squashed copy of 'defacto-squash-merged1'"

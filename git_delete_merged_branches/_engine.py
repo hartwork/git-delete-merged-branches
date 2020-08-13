@@ -182,7 +182,7 @@ class DeleteMergedBranches:
         return (f'temp/squashed-{topic_branch.replace("/", "-")}'
                 f'-vs-{target_branch.replace("/", "-")}')
 
-    def _has_been_squash_merged_into(self, target_branch, topic_branch, initial_branch) -> bool:
+    def _has_been_squash_merged_into(self, target_branch, topic_branch) -> bool:
         """
         Tries to detect a squashed merge, i.e. where a single commit
         on the target branch pulls in the sum of all commits
@@ -191,26 +191,16 @@ class DeleteMergedBranches:
         The implementation creates a temporary squashed copy of those commits
         and then asks ``git cherry`` if that squashed commit has an equivalent
         on the target branch.
-
-        The caller must make sure that we can safely changes branches,
-        e.g. the caller has to check that there are no uncommitted changes.
         """
         merge_base_commit_sha1 = self._git.merge_base(target_branch, topic_branch)
-        squashed_copy_branch_name = self._create_branch_name_for_squashed_copy(
-            topic_branch=topic_branch, target_branch=target_branch)
-        self._git.checkout(merge_base_commit_sha1, new_branch=squashed_copy_branch_name)
-        try:
-            self._git.squash_merge(topic_branch)
-            if self._git.has_staged_changes():
-                self._git.commit(message=f'Apply squashed copy of {topic_branch!r}')
-                cherry_lines = self._git.cherry(target_branch, squashed_copy_branch_name)
-                defacto_merged_into_target = all(line.startswith('-') for line in cherry_lines)
-            else:
-                defacto_merged_into_target = True
-            return defacto_merged_into_target
-        finally:
-            self._git.checkout(initial_branch)
-            self._git.delete_local_branches([squashed_copy_branch_name], force=True)
+        squash_merge_commit_sha1 = self._git.commit_tree(
+            message=f'Apply squashed copy of {topic_branch!r}',
+            parent_committish=merge_base_commit_sha1,
+            tree=topic_branch + '^{tree}')
+
+        cherry_lines = self._git.cherry(target_branch, squash_merge_commit_sha1)
+        defacto_merged_into_target = all(line.startswith('-') for line in cherry_lines)
+        return defacto_merged_into_target
 
     def _find_branches_merged_using_git_cherry(self, required_target_branches,
                                                candidate_branches) -> Set[str]:
@@ -257,8 +247,7 @@ class DeleteMergedBranches:
                 for topic_branch in candidates_for_squashed_merges:
                     for target_branch in sorted(required_target_branches):
                         defacto_merged_into_target = self._has_been_squash_merged_into(
-                            target_branch=target_branch, topic_branch=topic_branch,
-                            initial_branch=initial_branch)
+                            target_branch=target_branch, topic_branch=topic_branch)
                         if not defacto_merged_into_target:
                             break
                     else:  # i.e. no break happened above

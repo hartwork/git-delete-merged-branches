@@ -13,9 +13,12 @@ class Git:
     _GIT = 'git'
 
     _APP_EMAIL = f'{APP}@localhost'
+    _ARBITRARY_FIXED_DATETIME = '2005-12-21T00:00:00+00:00'  # release date of Git 1.0.0
     _COMMIT_ENVIRON = {
+        'GIT_AUTHOR_DATE': _ARBITRARY_FIXED_DATETIME,
         'GIT_AUTHOR_EMAIL': _APP_EMAIL,
         'GIT_AUTHOR_NAME': APP,
+        'GIT_COMMITTER_DATE': _ARBITRARY_FIXED_DATETIME,
         'GIT_COMMITTER_EMAIL': _APP_EMAIL,
         'GIT_COMMITTER_NAME': APP,
     }

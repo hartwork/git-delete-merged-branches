@@ -194,7 +194,7 @@ class DeleteMergedBranches:
         """
         merge_base_commit_sha1 = self._git.merge_base(target_branch, topic_branch)
         squash_merge_commit_sha1 = self._git.commit_tree(
-            message=f'Apply squashed copy of {topic_branch!r}',
+            message=f'Squash-merge {topic_branch!r}',
             parent_committish=merge_base_commit_sha1,
             tree=topic_branch + '^{tree}')
 

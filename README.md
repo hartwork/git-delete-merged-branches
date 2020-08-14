@@ -95,6 +95,12 @@ When the repository is a fork
   rather than `master` of your fork.
 - Consider keeping your fork's remote `master` up to date (using `git push`).
 
+When using GitHub:
+
+- You can make GitHub
+  [delete branches of merged pull requests](https://docs.github.com/en/github/administering-a-repository/managing-the-automatic-deletion-of-branches)
+  for you, to save `git-delete-merged-branches` some work on the remote side, if you like.
+
 
 # Support
 

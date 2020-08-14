@@ -2,24 +2,13 @@
 # Licensed under GPL v3 or later
 
 import subprocess
-import sys
-from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from textwrap import dedent
 from unittest import TestCase
-from unittest.mock import patch
 
-from .._cli import _parse_command_line
 from .._engine import DeleteMergedBranches
 from .._git import Git
 from .._messenger import Messenger
-
-
-class HelpOutputTest(TestCase):
-    def test_help(self):
-        with patch.object(sys, 'stdout', StringIO()) as mock_stdout, self.assertRaises(SystemExit):
-            _parse_command_line(colorize=True, args=['--help'])
-        self.assertIn('usage', mock_stdout.getvalue())
 
 
 def run_script(content, cwd):

@@ -12,10 +12,11 @@ from ._metadata import APP
 class Git:
     _GIT = 'git'
 
+    _APP_EMAIL = f'{APP}@localhost'
     _COMMIT_ENVIRON = {
-        'GIT_AUTHOR_EMAIL': f'{APP}@localhost',
+        'GIT_AUTHOR_EMAIL': _APP_EMAIL,
         'GIT_AUTHOR_NAME': APP,
-        'GIT_COMMITTER_EMAIL': f'{APP}@localhost',
+        'GIT_COMMITTER_EMAIL': _APP_EMAIL,
         'GIT_COMMITTER_NAME': APP,
     }
 

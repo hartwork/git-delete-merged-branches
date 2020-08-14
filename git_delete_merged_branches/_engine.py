@@ -177,11 +177,6 @@ class DeleteMergedBranches:
 
         return branches_merged_to_all_required_targets
 
-    @staticmethod
-    def _create_branch_name_for_squashed_copy(topic_branch, target_branch):
-        return (f'temp/squashed-{topic_branch.replace("/", "-")}'
-                f'-vs-{target_branch.replace("/", "-")}')
-
     def _has_been_squash_merged_into(self, target_branch, topic_branch) -> bool:
         """
         Tries to detect a squashed merge, i.e. where a single commit

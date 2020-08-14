@@ -66,7 +66,7 @@ To github.com:hartwork/wait-for-it.git
   leveraging `git cherry`)
 - Supports workflows with multiple release branches, e.g. only delete branches that have been merged to *all* of `master`, `dev`  and `staging`
 - Quick interactive configuration
-- Provider agnostic: Works with GitHub, GitLab and any other Git hosting
+- Provider agnostic: Works with GitHub, GitLab, Gitea and any other Git hosting
 - Takes safety seriously
 
 

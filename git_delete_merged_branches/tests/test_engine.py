@@ -1,11 +1,13 @@
 # Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under GPL v3 or later
 
+import os
 import subprocess
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from textwrap import dedent
 from unittest import TestCase
 
+from .._confirm import Confirmation
 from .._engine import DeleteMergedBranches
 from .._git import Git
 from .._messenger import Messenger
@@ -17,9 +19,10 @@ def run_script(content, cwd):
         set -x
         export HOME=  # make global git config have no effect
 
-        git init
-        git config user.name git-deleted-merged-branches
-        git config user.email gdmb@localhost
+        export GIT_AUTHOR_EMAIL=author1@localhost
+        export GIT_AUTHOR_NAME='Author One'
+        export GIT_COMMITTER_EMAIL=committer2@localhost
+        export GIT_COMMITTER_NAME='Committer Two'
     """)
 
     with NamedTemporaryFile() as f:
@@ -36,7 +39,9 @@ def create_git(work_dir):
 
 
 def create_dmb(git, effort_level):
-    return DeleteMergedBranches(git, messenger=None, confirmation=None,
+    messenger = Messenger(colorize=False)
+    confirmation = Confirmation(messenger=messenger, ask=False)
+    return DeleteMergedBranches(git, messenger=messenger, confirmation=confirmation,
                                 effort_level=effort_level)
 
 
@@ -44,6 +49,8 @@ class MergeDetectionTest(TestCase):
 
     def test_effort_1_truly_merged(self):
         setup_script = dedent("""
+            git init
+
             # Create a commit to base future branches upon
             echo line1 > file.txt
             git add file.txt
@@ -80,6 +87,8 @@ class MergeDetectionTest(TestCase):
 
     def test_effort_2_unsquashed_cherries(self):
         setup_script = dedent("""
+            git init
+
             # Create a commit to base future branches upon
             echo line1 > file1.txt
             git add file1.txt
@@ -137,6 +146,8 @@ class MergeDetectionTest(TestCase):
 
     def test_effort_3_squashed_cherries(self):
         setup_script = dedent("""
+            git init
+
             # Create a commit to base future branches upon
             echo line1 > file1.txt
             git add file1.txt
@@ -182,3 +193,54 @@ class MergeDetectionTest(TestCase):
             self.assertEqual(truly_merged, set())
             self.assertEqual(defacto_merged, {'defacto-squash-merged1',
                                               'defacto-squash-merged2'})
+
+
+class RefreshTargetBranchesTest(TestCase):
+    def test_refresh_gets_branches_back_in_sync(self):
+        setup_script = dedent("""
+            mkdir upstream
+            cd upstream
+                git init
+                git commit --allow-empty -m 'Dummy commit #1'
+                git branch pull-works
+                git branch pull-trouble
+                git checkout -b checkout-trouble
+                    echo line1 > collision.txt
+                    git add collision.txt
+                    git commit -m 'Add collision.txt'
+                git checkout master
+            cd ..
+            git clone -o upstream upstream downstream
+            cd downstream
+                git branch --track checkout-trouble upstream/checkout-trouble
+                git branch --track pull-trouble upstream/pull-trouble
+                git branch --track pull-works upstream/pull-works
+            cd ..
+            cd upstream
+                git checkout pull-trouble
+                    git merge --ff checkout-trouble
+                git checkout pull-works
+                    git commit --allow-empty -m 'Dummy commit #2'
+            cd ..
+            cd downstream
+                git checkout -b topic1
+                echo line1 > collision.txt  # uncommitted, just present
+        """)
+
+        with TemporaryDirectory() as d:
+            run_script(setup_script, cwd=d)
+
+            downstream_git = create_git(os.path.join(d, 'downstream'))
+            downstream_dmb = create_dmb(downstream_git, effort_level=3)
+            self.assertEqual(downstream_git.find_current_branch(), 'topic1')
+            self.assertEqual(downstream_git.find_local_branches(), [
+                'checkout-trouble', 'master', 'pull-trouble', 'pull-works', 'topic1'])
+            downstream_dmb.refresh_remotes(['upstream'])
+            self.assertEqual(len(downstream_git.cherry('pull-works', 'upstream/pull-works')), 1)
+
+            downstream_dmb.refresh_target_branches(['checkout-trouble',
+                                                    'pull-trouble',
+                                                    'pull-works'])
+
+            self.assertEqual(len(downstream_git.cherry('pull-works', 'upstream/pull-works')), 0)
+            self.assertEqual(downstream_git.find_current_branch(), 'topic1')

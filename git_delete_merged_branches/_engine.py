@@ -6,6 +6,7 @@ from functools import partial, reduce
 from operator import and_
 from typing import List, Optional, Set, Tuple
 
+from ._git import CheckoutFailed, PullFailed
 from ._metadata import APP
 from ._multiselect import multiselect
 
@@ -411,9 +412,21 @@ class DeleteMergedBranches:
         try:
             for branch_name in sorted_branches:
                 if branch_name != initial_branch:
-                    self._git.checkout(branch_name)
+                    try:
+                        self._git.checkout(branch_name)
+                    except CheckoutFailed:
+                        self._messenger.tell_error(f'Refreshing local branch {branch_name!r}'
+                                                   ' failed'
+                                                   ' because the branch cannot be checkout out.')
+                        continue
                     needs_a_switch_back = True
-                self._git.pull_ff_only()
+
+                try:
+                    self._git.pull_ff_only()
+                except PullFailed:
+                    self._messenger.tell_error(f'Refreshing local branch {branch_name!r} failed'
+                                               ' because the branch cannot be pulled'
+                                               ' with fast forward.')
         finally:
             if needs_a_switch_back:
                 self._git.checkout(initial_branch)

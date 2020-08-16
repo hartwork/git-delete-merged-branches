@@ -9,6 +9,18 @@ from typing import List, Optional
 from ._metadata import APP
 
 
+class GitException(Exception):
+    pass
+
+
+class CheckoutFailed(GitException):
+    pass
+
+
+class PullFailed(GitException):
+    pass
+
+
 class Git:
     _GIT = 'git'
 
@@ -168,11 +180,21 @@ class Git:
     def checkout(self, committish: str) -> None:
         argv = [self._GIT, 'checkout', '-q']
         argv.append(committish)
-        self._subprocess_check_output(argv, is_write=True)
+        try:
+            self._subprocess_check_output(argv, is_write=True)
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                raise CheckoutFailed
+            raise
 
     def pull_ff_only(self) -> None:
         argv = [self._GIT, 'pull', '--ff-only']
-        self._subprocess_check_output(argv, is_write=True)
+        try:
+            self._subprocess_check_output(argv, is_write=True)
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                raise PullFailed
+            raise
 
     def _has_changes(self, extra_argv: Optional[List[str]] = None) -> bool:
         argv = [self._GIT, 'diff', '--exit-code', '--quiet']

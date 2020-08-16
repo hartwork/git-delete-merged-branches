@@ -17,9 +17,10 @@ def run_script(content, cwd):
         set -x
         export HOME=  # make global git config have no effect
 
-        git init
-        git config user.name git-deleted-merged-branches
-        git config user.email gdmb@localhost
+        export GIT_AUTHOR_EMAIL=author1@localhost
+        export GIT_AUTHOR_NAME='Author One'
+        export GIT_COMMITTER_EMAIL=committer2@localhost
+        export GIT_COMMITTER_NAME='Committer Two'
     """)
 
     with NamedTemporaryFile() as f:
@@ -44,6 +45,8 @@ class MergeDetectionTest(TestCase):
 
     def test_effort_1_truly_merged(self):
         setup_script = dedent("""
+            git init
+
             # Create a commit to base future branches upon
             echo line1 > file.txt
             git add file.txt
@@ -80,6 +83,8 @@ class MergeDetectionTest(TestCase):
 
     def test_effort_2_unsquashed_cherries(self):
         setup_script = dedent("""
+            git init
+
             # Create a commit to base future branches upon
             echo line1 > file1.txt
             git add file1.txt
@@ -137,6 +142,8 @@ class MergeDetectionTest(TestCase):
 
     def test_effort_3_squashed_cherries(self):
         setup_script = dedent("""
+            git init
+
             # Create a commit to base future branches upon
             echo line1 > file1.txt
             git add file1.txt

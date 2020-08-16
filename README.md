@@ -102,6 +102,21 @@ When using GitHub:
   for you, to save `git-delete-merged-branches` some work on the remote side, if you like.
 
 
+# Name clash on "git-delete-merged-branches" with git-extras
+
+Utility collection [git-extras](https://github.com/tj/git-extras) provides a
+[simple shell script named `git-delete-merged-branches`](https://github.com/tj/git-extras/blob/master/bin/git-delete-merged-branches)
+that competes for command `git-delete-merged-branches` when both software packages are installed.
+
+To address this conflict you can:
+
+- a) Invoke `python3 -m git_delete_merged_branches` instead of `git-delete-merged-branches`
+- b) Invoke command `git-dmb` instead of `git-delete-merged-branches`
+- c) Control path resolution order through environment variable `$PATH`
+- d) Invoke `git-delete-merged-branches` with its absolute path.
+     You can run `which -a git-delete-merged-branches` to see where it's located.
+
+
 # Support
 
 Please report any bugs that you find.

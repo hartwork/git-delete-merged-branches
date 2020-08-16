@@ -36,6 +36,7 @@ setup(
     entry_points={
         'console_scripts': [
             f'{APP} = git_delete_merged_branches.__main__:main',
+            'git-dmb = git_delete_merged_branches.__main__:main',
         ],
     },
 

@@ -1,6 +1,7 @@
 # Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under GPL v3 or later
 
+import os
 import re
 from functools import partial, reduce
 from operator import and_
@@ -66,16 +67,14 @@ class DeleteMergedBranches:
         if len(valid_names) < min_selection_count:
             raise _TooFewOptionsAvailable
 
-        heading = f'== Configure {APP} for this repository =='
         help = ('(Press [Space] to toggle selection, [Enter]/[Return] to accept'
                 ', [Ctrl]+[C] to quit.)')
-        heading = f'{heading}\n{description}\n\n{help}'
 
         old_names = set(old_names)
         initial_selection = [i for i, name in enumerate(valid_names) if name in old_names]
         if valid_names:
-            new_names = set(multiselect(valid_names, initial_selection,
-                                        heading, min_selection_count))
+            new_names = set(multiselect(self._messenger, valid_names, initial_selection,
+                                        description, help, min_selection_count))
         else:
             new_names = set()
         assert len(new_names) >= min_selection_count
@@ -119,6 +118,9 @@ class DeleteMergedBranches:
                                       self._FORMAT_REMOTE_ENABLED, min_selection_count=0)
 
     def _configure(self, git_config):
+        repo_basename = os.path.basename(os.getcwd())
+        self._messenger.tell_info(f'Configure {APP} for repository {repo_basename!r}:')
+
         new_required_branches = self._configure_required_branches(git_config)
         self._configure_excluded_branches(git_config, new_required_branches)
         self._configure_enabled_remotes(git_config)

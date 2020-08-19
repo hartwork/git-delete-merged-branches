@@ -34,7 +34,7 @@ def run_script(content, cwd):
 
 def create_git(work_dir):
     messenger = Messenger(colorize=False)
-    return Git(messenger=messenger, ask=True, pretend=False, verbose=True,
+    return Git(messenger=messenger, pretend=False, verbose=True,
                work_dir=work_dir)
 
 

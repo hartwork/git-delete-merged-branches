@@ -321,7 +321,7 @@ class DeleteMergedBranches:
                                            remote_name, all_branch_names: Set[str]):
         if not all((f'{remote_name}/{branch_name}' in all_branch_names)
                    for branch_name in required_target_branches):
-            self._messenger.tell_info('Skipped remote {remote_name!r} '
+            self._messenger.tell_info(f'Skipped remote {remote_name!r} '
                                       'as it does not have all required branches.')
             return
 

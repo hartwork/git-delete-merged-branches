@@ -61,15 +61,15 @@ class Git:
         return text.split('\n')
 
     def extract_git_config(self):
-        argv = [self._GIT, 'config', '--list']
+        argv = [self._GIT, 'config', '--list', '--null']
         output_bytes = self._subprocess_check_output(argv, is_write=False)
-        config_lines = self._output_bytes_to_lines(output_bytes)
+        key_newline_value_list = [chunk.decode(self._GIT_ENCODING)
+                                  for chunk in output_bytes.split(b'\0')]
         git_config = OrderedDict()
-        for line in config_lines:
-            equal_sign_index = line.index('=')
-            if equal_sign_index < 1:
+        for key_newline_value in key_newline_value_list:
+            if not key_newline_value:
                 continue
-            key, value = line[:equal_sign_index], line[equal_sign_index + 1:]
+            key, value = key_newline_value.split('\n', 1)
             git_config[key] = value
         return git_config
 

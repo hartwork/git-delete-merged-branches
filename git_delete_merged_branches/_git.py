@@ -23,6 +23,7 @@ class PullFailed(GitException):
 
 class Git:
     _GIT = 'git'
+    _GIT_ENCODING = 'utf-8'
 
     _APP_EMAIL = f'{APP}@localhost'
     _ARBITRARY_FIXED_DATETIME = '2005-12-21T00:00:00+00:00'  # release date of Git 1.0.0
@@ -54,7 +55,7 @@ class Git:
 
     @classmethod
     def _output_bytes_to_lines(cls, output_bytes) -> List[str]:
-        text = output_bytes.decode('utf-8').rstrip()
+        text = output_bytes.decode(cls._GIT_ENCODING).rstrip()
         if not text:  # protect against this: ''.split('\n') -> ['']
             return []
         return text.split('\n')

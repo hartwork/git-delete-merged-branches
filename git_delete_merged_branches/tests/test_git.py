@@ -16,7 +16,7 @@ class FindBranchesTest(TestCase):
     def test_find_branches_drops_head(self):
         existing_branches = ['remote1/HEAD', 'remote2/master']
         expected_branches = ['remote2/master']
-        git = Git(Messenger(colorize=False), ask=False, pretend=True, verbose=False)
+        git = Git(Messenger(colorize=False), pretend=True, verbose=False)
         command_output_to_inject = ('\n'.join(existing_branches) + '\n').encode('utf-8')
         assert isinstance(command_output_to_inject, bytes)
 
@@ -60,7 +60,7 @@ class ExtractGitConfigTest(TestCase):
 
         with TemporaryDirectory() as d:
             subprocess.call(['git', 'init'], cwd=d)
-            git = Git(Messenger(colorize=False), ask=False, pretend=False, verbose=False,
+            git = Git(Messenger(colorize=False), pretend=False, verbose=False,
                       work_dir=d)
             for k, v in expected_config.items():
                 git.set_config(k, v)

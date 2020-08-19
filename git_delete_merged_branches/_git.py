@@ -36,9 +36,8 @@ class Git:
         'GIT_COMMITTER_NAME': APP,
     }
 
-    def __init__(self, messenger, ask, pretend, verbose, work_dir=None):
+    def __init__(self, messenger, pretend, verbose, work_dir=None):
         self._messenger = messenger
-        self._ask = ask
         self._verbose = verbose
         self._pretend = pretend
         self._working_directory = work_dir

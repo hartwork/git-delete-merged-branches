@@ -25,8 +25,7 @@ setup(
     ],
     install_requires=[
         'colorama>=0.4.3',
-        'clintermission==0.1.0',
-        'prompt-toolkit>=3.0.6',
+        'clintermission==0.2.0',
     ],
     tests_require=[
         'parameterized',

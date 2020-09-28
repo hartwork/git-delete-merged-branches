@@ -16,7 +16,7 @@ jobs:
         runs-on: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.runs-on }}
     steps:
-    - uses: actions/checkout@v2.3.2
+    - uses: actions/checkout@v2.3.3
     - uses: actions/setup-python@v2.1.2
       with:
         python-version: ${{ matrix.python-version }}

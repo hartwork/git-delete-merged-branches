@@ -12,6 +12,6 @@ jobs:
     name: Run pre-commit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2.3.2
+    - uses: actions/checkout@v2.3.3
     - uses: actions/setup-python@v2.1.2
     - uses: pre-commit/action@v2.0.0

@@ -7,6 +7,8 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from textwrap import dedent
 from unittest import TestCase
 
+from parameterized import parameterized
+
 from .._confirm import Confirmation
 from .._engine import DeleteMergedBranches
 from .._git import Git
@@ -244,3 +246,21 @@ class RefreshTargetBranchesTest(TestCase):
 
             self.assertEqual(len(downstream_git.cherry('pull-works', 'upstream/pull-works')), 0)
             self.assertEqual(downstream_git.find_current_branch(), 'topic1')
+
+
+class GitConfigKeysContainDotsTest(TestCase):
+    @parameterized.expand([
+        (DeleteMergedBranches.find_required_branches,
+         'branch.release-1.0.x.dmb-required', 'release-1.0.x'),
+        (DeleteMergedBranches.find_excluded_branches,
+         'branch.release-1.0.x.dmb-excluded', 'release-1.0.x'),
+        (DeleteMergedBranches.find_enabled_remotes,
+         'remote.linux-6.x.dmb-enabled', 'linux-6.x'),
+    ])
+    def test_supports_branch_names_containing_dots(self, extractor_function, git_config_dict_key,
+                                                   expected_value):
+        assert '.' in expected_value
+        git_config_dict = {
+            git_config_dict_key: 'true',
+        }
+        self.assertEqual(extractor_function(git_config_dict), [expected_value])

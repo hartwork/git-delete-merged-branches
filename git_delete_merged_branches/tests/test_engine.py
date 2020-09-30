@@ -32,13 +32,13 @@ def run_script(content, cwd):
         subprocess.check_call(['bash', f.name], cwd=cwd)
 
 
-def create_git(work_dir):
+def create_git(work_dir: str) -> Git:
     messenger = Messenger(colorize=False)
     return Git(messenger=messenger, pretend=False, verbose=True,
                work_dir=work_dir)
 
 
-def create_dmb(git, effort_level):
+def create_dmb(git: Git, effort_level: int) -> DeleteMergedBranches:
     messenger = Messenger(colorize=False)
     confirmation = Confirmation(messenger=messenger, ask=False)
     return DeleteMergedBranches(git, messenger=messenger, confirmation=confirmation,

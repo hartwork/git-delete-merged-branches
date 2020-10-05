@@ -11,7 +11,5 @@ updates:
     directory: "/"
     labels:
       - "enhancement"
-    assignees:
-      - "hartwork"
     schedule:
       interval: "weekly"

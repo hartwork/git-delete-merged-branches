@@ -146,7 +146,7 @@ class Git:
             return
         remote_prefix = f'{remote_name}/'
         remote_branches_to_delete = [
-            remote_slash_branch[len(remote_prefix):]
+            'refs/heads/' + remote_slash_branch[len(remote_prefix):]
             for remote_slash_branch
             in branch_names
             if remote_slash_branch.startswith(remote_prefix)

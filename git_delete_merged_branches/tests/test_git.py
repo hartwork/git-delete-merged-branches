@@ -1,8 +1,9 @@
 # Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under GPL v3 or later
-
+import os
 import subprocess
 from tempfile import TemporaryDirectory
+from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -10,6 +11,7 @@ from parameterized import parameterized
 
 from .._git import Git
 from .._messenger import Messenger
+from .helpers import create_git, run_script
 
 
 class FindBranchesTest(TestCase):
@@ -70,3 +72,28 @@ class ExtractGitConfigTest(TestCase):
             }
 
         self.assertEqual(actual_config, expected_config)
+
+
+class RemoteBranchCollidesWithATagTest(TestCase):
+    def test_remote_branch_deletable_despite_existing_tag_with_the_same_name(self):
+        setup_script = dedent("""\
+            mkdir upstream
+
+            pushd upstream
+                git init
+                git commit --allow-empty -m 'First commit'
+                git tag -m '' 1.0.0
+                git branch 1.0.0
+            popd
+
+            git clone upstream downstream
+        """)
+
+        with TemporaryDirectory() as d:
+            run_script(setup_script, cwd=d)
+            downstream_git = create_git(work_dir=os.path.join(d, 'downstream'))
+            self.assertIn('origin/1.0.0', downstream_git.find_remote_branches_at('origin'))
+
+            downstream_git.delete_remote_branches(['origin/1.0.0'], 'origin')
+
+            self.assertNotIn('origin/1.0.0', downstream_git.find_remote_branches_at('origin'))

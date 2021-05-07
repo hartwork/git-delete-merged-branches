@@ -404,7 +404,7 @@ class DeleteMergedBranches:
             return
 
         description = (f'Do you want to run "git pull --ff-only"'
-                       f' for {len(sorted_branches)} branches(s):\n'
+                       f' for {len(sorted_branches)} branch(es):\n'
                        + '\n'.join(f'  - {name}' for name in sorted_branches)
                        + '\n\nPull?')
         if not self._confirmation.confirmed(description):

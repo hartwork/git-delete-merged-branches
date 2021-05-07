@@ -19,7 +19,7 @@ Do you want to run "git remote update --prune" for 1 remote(s):
 
 Update? [y/N] y
 
-Do you want to run "git pull --ff-only" for 1 branches(s):
+Do you want to run "git pull --ff-only" for 1 branch(es):
   - master
 
 Pull? [y/N] y

@@ -5,6 +5,7 @@ import os
 import re
 from functools import partial, reduce
 from operator import and_
+from subprocess import CalledProcessError
 from typing import List, Optional, Set, Tuple
 
 from ._git import CheckoutFailed, PullFailed
@@ -285,6 +286,12 @@ class DeleteMergedBranches:
 
         return (truly_merged_branches, defacto_merged_branches)
 
+    def _report_branches_as_deleted(self, branch_names: Set[str], remote_name: str = None):
+        branch_type = 'local' if (remote_name is None) else 'remote'
+        info_text = (f'{len(branch_names)} {branch_type} branch(es) deleted:\n'
+                     + '\n'.join(f'  - {name}' for name in sorted(branch_names)))
+        self._messenger.tell_info(info_text)
+
     def _delete_local_merged_branches_for(self, required_target_branches, excluded_branches):
         current_branch = self._git.find_current_branch()
         current_branch_would_be_analyzed = (current_branch is not None
@@ -312,10 +319,18 @@ class DeleteMergedBranches:
         if not self._confirmation.confirmed(description):
             return
 
+        # NOTE: With regard to reporting, the idea is to
+        #       - report all deleted local branches at once when deletion was successful, and to
+        #       - not silence partial success
+        #         when the first delete call was successful and the second call was not.
         self._git.delete_local_branches(truly_merged)
-        self._git.delete_local_branches(defacto_merged, force=True)
-
-        self._messenger.tell_info(f'{len(local_branches_to_delete)} local branch(es) deleted.')
+        try:
+            self._git.delete_local_branches(defacto_merged, force=True)
+        except CalledProcessError:
+            self._report_branches_as_deleted(truly_merged)
+            raise
+        else:
+            self._report_branches_as_deleted(truly_merged | defacto_merged)
 
     def _delete_remote_merged_branches_for(self, required_target_branches, excluded_branches,
                                            remote_name, all_branch_names: Set[str]):
@@ -342,7 +357,7 @@ class DeleteMergedBranches:
             return
 
         self._git.delete_remote_branches(remote_branches_to_delete, remote_name)
-        self._messenger.tell_info(f'{len(remote_branches_to_delete)} remote branch(es) deleted.')
+        self._report_branches_as_deleted(remote_branches_to_delete, remote_name)
 
     def refresh_remotes(self, enabled_remotes):
         sorted_remotes = sorted(set(enabled_remotes))

@@ -288,8 +288,7 @@ class DeleteMergedBranches:
 
     def _report_branches_as_deleted(self, branch_names: Set[str], remote_name: str = None):
         branch_type = 'local' if (remote_name is None) else 'remote'
-        info_text = (f'{len(branch_names)} {branch_type} branch(es) deleted:\n'
-                     + '\n'.join(f'  - {name}' for name in sorted(branch_names)))
+        info_text = f'{len(branch_names)} {branch_type} branch(es) deleted.'
         self._messenger.tell_info(info_text)
 
     def _delete_local_merged_branches_for(self, required_target_branches, excluded_branches):

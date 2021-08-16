@@ -42,15 +42,23 @@ class Git:
         self._pretend = pretend
         self._working_directory = work_dir
 
-    def _subprocess_check_output(self, argv, is_write, env=None):
+    def _wrap_subprocess(self, subprocess_function, argv, is_write, pretend_result, env):
         pretend = is_write and self._pretend
         if self._verbose:
             comment = 'skipped due to --dry-run' if pretend else ''
             display_argv = [a for a in argv if not a.startswith('--format=')]
             self._messenger.tell_command(display_argv, comment)
         if pretend:
-            return bytes()
-        return subprocess.check_output(argv, cwd=self._working_directory, env=env)
+            return pretend_result
+        return subprocess_function(argv, cwd=self._working_directory, env=env)
+
+    def _subprocess_check_output(self, argv, is_write, env=None):
+        return self._wrap_subprocess(subprocess.check_output, argv=argv,
+                                     is_write=is_write, pretend_result=bytes(), env=env)
+
+    def _subprocess_check_call(self, argv, is_write, env=None):
+        return self._wrap_subprocess(subprocess.check_call, argv=argv,
+                                     is_write=is_write, pretend_result=0, env=env)
 
     @classmethod
     def _output_bytes_to_lines(cls, output_bytes) -> List[str]:
@@ -139,7 +147,7 @@ class Git:
             argv.append('--force')
         argv += sorted(branch_names)
 
-        self._subprocess_check_output(argv, is_write=True)
+        self._subprocess_check_call(argv, is_write=True)
 
     def delete_remote_branches(self, branch_names, remote_name):
         if not branch_names:

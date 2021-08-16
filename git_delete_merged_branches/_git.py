@@ -56,6 +56,10 @@ class Git:
         return self._wrap_subprocess(subprocess.check_output, argv=argv,
                                      is_write=is_write, pretend_result=bytes(), env=env)
 
+    def _subprocess_check_call(self, argv, is_write, env=None):
+        return self._wrap_subprocess(subprocess.check_call, argv=argv,
+                                     is_write=is_write, pretend_result=0, env=env)
+
     @classmethod
     def _output_bytes_to_lines(cls, output_bytes) -> List[str]:
         text = output_bytes.decode(cls._GIT_ENCODING).rstrip()
@@ -143,7 +147,7 @@ class Git:
             argv.append('--force')
         argv += sorted(branch_names)
 
-        self._subprocess_check_output(argv, is_write=True)
+        self._subprocess_check_call(argv, is_write=True)
 
     def delete_remote_branches(self, branch_names, remote_name):
         if not branch_names:

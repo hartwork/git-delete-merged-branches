@@ -6,6 +6,14 @@ from setuptools import find_packages, setup
 
 from git_delete_merged_branches._metadata import APP, DESCRIPTION, VERSION
 
+_tests_require = [
+    'parameterized',
+]
+
+_extras_require = {
+    'tests': _tests_require,
+}
+
 setup(
     name=APP,
     version=VERSION,
@@ -27,9 +35,8 @@ setup(
         'colorama>=0.4.3',
         'clintermission==0.2.0',
     ],
-    tests_require=[
-        'parameterized',
-    ],
+    extras_require=_extras_require,
+    tests_require=_tests_require,
 
     packages=find_packages(),
 

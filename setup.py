@@ -33,7 +33,7 @@ setup(
     ],
     install_requires=[
         'colorama>=0.4.3',
-        'clintermission==0.2.0',
+        'prompt-toolkit>=3.0.18',
     ],
     extras_require=_extras_require,
     tests_require=_tests_require,

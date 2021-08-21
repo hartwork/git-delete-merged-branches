@@ -6,9 +6,11 @@ from typing import List
 from clintermission import (CliMenuCursor, CliMenuStyle, CliMultiMenu,
                             CliSelectionStyle)
 
+from ._messenger import Messenger
 
-def multiselect(messenger, options, initial_selection, title, help,
-                min_selection_count) -> List[str]:
+
+def multiselect(messenger: Messenger, options: List[str], initial_selection: List[int],
+                title: str, help: str, min_selection_count: int) -> List[str]:
     assert len(options) >= min_selection_count
 
     highlighted_style = 'bold fg:black bg:white'

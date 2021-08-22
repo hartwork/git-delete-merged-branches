@@ -27,13 +27,13 @@ setup(
     author_email='sebastian@pipping.org',
     url=f'https://github.com/hartwork/{APP}',
 
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     setup_requires=[
         'setuptools>=38.6.0',  # for long_description_content_type
     ],
     install_requires=[
         'colorama>=0.4.3',
-        'clintermission==0.2.0',
+        'prompt-toolkit>=3.0.18',
     ],
     extras_require=_extras_require,
     tests_require=_tests_require,
@@ -54,9 +54,9 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Software Development :: Version Control',
         'Topic :: Software Development :: Version Control :: Git',
     ],

@@ -38,8 +38,7 @@ class OutputBytesToLinesTest(TestCase):
         (b'\n\n', []),
     ])
     def test_trailing_newlines(self, output_bytes, extected_interpretation):
-        self.assertEqual(Git._output_bytes_to_lines(output_bytes),
-                         extected_interpretation)
+        self.assertEqual(Git._output_bytes_to_lines(output_bytes), extected_interpretation)
 
 
 class ExtractGitConfigTest(TestCase):
@@ -62,13 +61,12 @@ class ExtractGitConfigTest(TestCase):
 
         with TemporaryDirectory() as d:
             subprocess.call(['git', 'init'], cwd=d)
-            git = Git(Messenger(colorize=False), pretend=False, verbose=False,
-                      work_dir=d)
+            git = Git(Messenger(colorize=False), pretend=False, verbose=False, work_dir=d)
             for k, v in expected_config.items():
                 git.set_config(k, v)
             actual_config = {
-                k: v for k, v in git.extract_git_config().items()
-                if k in expected_config
+                k: v
+                for k, v in git.extract_git_config().items() if k in expected_config
             }
 
         self.assertEqual(actual_config, expected_config)

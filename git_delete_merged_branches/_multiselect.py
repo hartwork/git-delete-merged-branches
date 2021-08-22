@@ -15,8 +15,7 @@ from prompt_toolkit.formatted_text.base import StyleAndTextTuples
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import HSplit, Layout, Window
 from prompt_toolkit.layout.controls import BufferControl
-from prompt_toolkit.layout.processors import (Processor, Transformation,
-                                              TransformationInput)
+from prompt_toolkit.layout.processors import Processor, Transformation, TransformationInput
 from prompt_toolkit.search import SearchState
 from prompt_toolkit.widgets import SearchToolbar
 
@@ -27,12 +26,10 @@ class _LineRenderProcessor(Processor):
     """
     A Prompt Toolkit input processor for Buffer that formats lines for display to the user.
     """
-
     def __init__(self, prompt: '_MultiSelectPrompt'):
         self._prompt = prompt
 
-    def apply_transformation(self, transformation_input: TransformationInput
-                             ) -> Transformation:
+    def apply_transformation(self, transformation_input: TransformationInput) -> Transformation:
         line_info = self._prompt.lines[transformation_input.lineno]
         line_is_item = isinstance(line_info, self._prompt.ItemLine)
 
@@ -43,8 +40,7 @@ class _LineRenderProcessor(Processor):
             cursor = '▶' if highlighted else ' '
             checkmark = 'x' if line_info.selected else ' '
             fallback_style = (self._prompt.highlighted_style
-                              if highlighted else
-                              self._prompt.neutral_style)
+                              if highlighted else self._prompt.neutral_style)
             new_fragments.append((fallback_style, f'{cursor} [{checkmark}] '))
         elif isinstance(line_info, self._prompt.HeaderLine):
             fallback_style = self._prompt.header_style
@@ -78,12 +74,11 @@ class _LineJumpingBuffer(Buffer):
     A Prompt Toolkit Buffer that will skip all but the first search match per line
     when iterating search matches using keys "n" and "N".
     """
-
     def apply_search(
-            self,
-            search_state: SearchState,
-            include_current_position: bool = True,
-            count: int = 1,
+        self,
+        search_state: SearchState,
+        include_current_position: bool = True,
+        count: int = 1,
     ) -> None:
         previous_cursor_position = self.cursor_position
         previous_line_index, _ = self.document.translate_index_to_position(self.cursor_position)
@@ -109,7 +104,6 @@ class _MultiSelectPrompt:
     """
     An interactive multi-select using the terminal, based on Prompt Toolkit.
     """
-
     @dataclass
     class _LineBase(ABC):
         text: str
@@ -129,8 +123,11 @@ class _MultiSelectPrompt:
         value: Any
         selected: bool
 
-    def __init__(self, highlighted_style: str = '', header_style: str = '',
-                 initial_cursor_index=0, min_selection_count=0):
+    def __init__(self,
+                 highlighted_style: str = '',
+                 header_style: str = '',
+                 initial_cursor_index=0,
+                 min_selection_count=0):
         self.neutral_style: str = ''
         self.highlighted_style: str = highlighted_style
         self.header_style: str = header_style
@@ -230,8 +227,11 @@ class _MultiSelectPrompt:
 
         self.peak_item_label_length = max(self.peak_item_label_length, len(label))
 
-        item_line = self.ItemLine(selected=selected, item_index=len(self._items),
-                                  line_index=len(self.lines), text=label, value=value)
+        item_line = self.ItemLine(selected=selected,
+                                  item_index=len(self._items),
+                                  line_index=len(self.lines),
+                                  text=label,
+                                  value=value)
 
         self.lines.append(item_line)
         self._items.append(item_line)
@@ -268,9 +268,7 @@ class _MultiSelectPrompt:
                                        input_processors=[_LineRenderProcessor(prompt=self)],
                                        preview_search=True,
                                        search_buffer_control=search.control)
-        hsplit = HSplit([Window(buffer_control,
-                                always_hide_cursor=True,
-                                wrap_lines=True), search])
+        hsplit = HSplit([Window(buffer_control, always_hide_cursor=True, wrap_lines=True), search])
         return Layout(hsplit)
 
     def _collect_selected_values(self):
@@ -308,11 +306,11 @@ class _MultiSelectPrompt:
 
             # override
             def find_backwards(
-                    self,
-                    sub: str,
-                    in_current_line: bool = False,
-                    ignore_case: bool = False,
-                    count: int = 1,
+                self,
+                sub: str,
+                in_current_line: bool = False,
+                ignore_case: bool = False,
+                count: int = 1,
             ) -> Optional[int]:
                 func = partial(super().find_backwards,
                                sub=sub,
@@ -339,8 +337,8 @@ class _MultiSelectPrompt:
             return self._accepted_selection
 
 
-def multiselect(messenger: Messenger, options: List[str], initial_selection: List[int],
-                title: str, help: str, min_selection_count: int) -> List[str]:
+def multiselect(messenger: Messenger, options: List[str], initial_selection: List[int], title: str,
+                help: str, min_selection_count: int) -> List[str]:
     assert len(options) >= min_selection_count
 
     menu = _MultiSelectPrompt(

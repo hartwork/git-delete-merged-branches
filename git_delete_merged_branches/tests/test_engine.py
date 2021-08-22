@@ -13,7 +13,6 @@ from .helpers import create_dmb, create_git, run_script
 
 
 class MergeDetectionTest(TestCase):
-
     def test_effort_1_truly_merged(self):
         setup_script = dedent("""
             git init
@@ -46,8 +45,9 @@ class MergeDetectionTest(TestCase):
                              ['master', 'merged1', 'merged2', 'not-merged1'])
 
             truly_merged, defacto_merged = (
-                dmb._find_branches_merged_to_all_targets_for_single_remote(
-                    {'master'}, set(), remote_name=None))
+                dmb._find_branches_merged_to_all_targets_for_single_remote({'master'},
+                                                                           set(),
+                                                                           remote_name=None))
 
             self.assertEqual(truly_merged, {'merged1', 'merged2'})
             self.assertEqual(defacto_merged, set())
@@ -100,13 +100,14 @@ class MergeDetectionTest(TestCase):
             run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=2)
-            self.assertEqual(git.find_local_branches(),
-                             ['defacto-merged1', 'defacto-merged2', 'master',
-                              'not-defacto-merged1'])
+            self.assertEqual(
+                git.find_local_branches(),
+                ['defacto-merged1', 'defacto-merged2', 'master', 'not-defacto-merged1'])
 
             truly_merged, defacto_merged = (
-                dmb._find_branches_merged_to_all_targets_for_single_remote(
-                    {'master'}, set(), remote_name=None))
+                dmb._find_branches_merged_to_all_targets_for_single_remote({'master'},
+                                                                           set(),
+                                                                           remote_name=None))
 
             self.assertEqual(truly_merged, set())
             self.assertEqual(defacto_merged, {'defacto-merged1', 'defacto-merged2'})
@@ -149,17 +150,18 @@ class MergeDetectionTest(TestCase):
             run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=3)
-            self.assertEqual(git.find_local_branches(),
-                             ['defacto-squash-merged1', 'defacto-squash-merged2',
-                              'master', 'not-defacto-squash-merged1'])
+            self.assertEqual(git.find_local_branches(), [
+                'defacto-squash-merged1', 'defacto-squash-merged2', 'master',
+                'not-defacto-squash-merged1'
+            ])
 
             truly_merged, defacto_merged = (
-                dmb._find_branches_merged_to_all_targets_for_single_remote(
-                    {'master'}, set(), remote_name=None))
+                dmb._find_branches_merged_to_all_targets_for_single_remote({'master'},
+                                                                           set(),
+                                                                           remote_name=None))
 
             self.assertEqual(truly_merged, set())
-            self.assertEqual(defacto_merged, {'defacto-squash-merged1',
-                                              'defacto-squash-merged2'})
+            self.assertEqual(defacto_merged, {'defacto-squash-merged1', 'defacto-squash-merged2'})
 
 
 class RefreshTargetBranchesTest(TestCase):
@@ -200,14 +202,13 @@ class RefreshTargetBranchesTest(TestCase):
             downstream_git = create_git(os.path.join(d, 'downstream'))
             downstream_dmb = create_dmb(downstream_git, effort_level=3)
             self.assertEqual(downstream_git.find_current_branch(), 'topic1')
-            self.assertEqual(downstream_git.find_local_branches(), [
-                'checkout-trouble', 'master', 'pull-trouble', 'pull-works', 'topic1'])
+            self.assertEqual(downstream_git.find_local_branches(),
+                             ['checkout-trouble', 'master', 'pull-trouble', 'pull-works', 'topic1'])
             downstream_dmb.refresh_remotes(['upstream'])
             self.assertEqual(len(downstream_git.cherry('pull-works', 'upstream/pull-works')), 1)
 
-            downstream_dmb.refresh_target_branches(['checkout-trouble',
-                                                    'pull-trouble',
-                                                    'pull-works'])
+            downstream_dmb.refresh_target_branches(
+                ['checkout-trouble', 'pull-trouble', 'pull-works'])
 
             self.assertEqual(len(downstream_git.cherry('pull-works', 'upstream/pull-works')), 0)
             self.assertEqual(downstream_git.find_current_branch(), 'topic1')
@@ -215,12 +216,11 @@ class RefreshTargetBranchesTest(TestCase):
 
 class GitConfigKeysContainDotsTest(TestCase):
     @parameterized.expand([
-        (DeleteMergedBranches.find_required_branches,
-         'branch.release-1.0.x.dmb-required', 'release-1.0.x'),
-        (DeleteMergedBranches.find_excluded_branches,
-         'branch.release-1.0.x.dmb-excluded', 'release-1.0.x'),
-        (DeleteMergedBranches.find_enabled_remotes,
-         'remote.linux-6.x.dmb-enabled', 'linux-6.x'),
+        (DeleteMergedBranches.find_required_branches, 'branch.release-1.0.x.dmb-required',
+         'release-1.0.x'),
+        (DeleteMergedBranches.find_excluded_branches, 'branch.release-1.0.x.dmb-excluded',
+         'release-1.0.x'),
+        (DeleteMergedBranches.find_enabled_remotes, 'remote.linux-6.x.dmb-enabled', 'linux-6.x'),
     ])
     def test_supports_branch_names_containing_dots(self, extractor_function, git_config_dict_key,
                                                    expected_value):

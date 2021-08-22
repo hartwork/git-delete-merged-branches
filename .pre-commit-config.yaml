@@ -25,3 +25,8 @@ repos:
     rev: v5.1.4
     hooks:
       - id: isort
+
+  - repo: https://github.com/google/yapf
+    rev: v0.31.0
+    hooks:
+      - id: yapf

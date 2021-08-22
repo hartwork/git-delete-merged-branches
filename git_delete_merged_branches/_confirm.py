@@ -1,6 +1,7 @@
 # Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under GPL v3 or later
 
+
 class Confirmation:
     _CONFIRM_GOOD = ('y', 'Y')
     _CONFIRM_BAD = ('', 'n', 'N')

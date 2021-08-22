@@ -53,12 +53,18 @@ class Git:
         return subprocess_function(argv, cwd=self._working_directory, env=env)
 
     def _subprocess_check_output(self, argv, is_write, env=None):
-        return self._wrap_subprocess(subprocess.check_output, argv=argv,
-                                     is_write=is_write, pretend_result=bytes(), env=env)
+        return self._wrap_subprocess(subprocess.check_output,
+                                     argv=argv,
+                                     is_write=is_write,
+                                     pretend_result=bytes(),
+                                     env=env)
 
     def _subprocess_check_call(self, argv, is_write, env=None):
-        return self._wrap_subprocess(subprocess.check_call, argv=argv,
-                                     is_write=is_write, pretend_result=0, env=env)
+        return self._wrap_subprocess(subprocess.check_call,
+                                     argv=argv,
+                                     is_write=is_write,
+                                     pretend_result=0,
+                                     env=env)
 
     @classmethod
     def _output_bytes_to_lines(cls, output_bytes) -> List[str]:
@@ -70,8 +76,9 @@ class Git:
     def extract_git_config(self):
         argv = [self._GIT, 'config', '--list', '--null']
         output_bytes = self._subprocess_check_output(argv, is_write=False)
-        key_newline_value_list = [chunk.decode(self._GIT_ENCODING)
-                                  for chunk in output_bytes.split(b'\0')]
+        key_newline_value_list = [
+            chunk.decode(self._GIT_ENCODING) for chunk in output_bytes.split(b'\0')
+        ]
         git_config = OrderedDict()
         for key_newline_value in key_newline_value_list:
             if not key_newline_value:
@@ -88,14 +95,16 @@ class Git:
     def _find_branches(self, extra_argv=None) -> List[str]:
         argv = [
             self._GIT,
-            'branch', '--format=%(refname:lstrip=2)',
+            'branch',
+            '--format=%(refname:lstrip=2)',
         ]
         if extra_argv is not None:
             argv += extra_argv
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         lines = self._output_bytes_to_lines(output_bytes)
-        return [line for line in lines
-                if not line.endswith('/HEAD') and 'HEAD detached at' not in line]
+        return [
+            line for line in lines if not line.endswith('/HEAD') and 'HEAD detached at' not in line
+        ]
 
     def find_local_branches(self) -> List[str]:
         return self._find_branches()
@@ -127,7 +136,8 @@ class Git:
         if remote:
             extra_argv.append('--remote')
         extra_argv += [
-            '--merged', target_branch,
+            '--merged',
+            target_branch,
         ]
         merged_branches = self._find_branches(extra_argv)
         return (branch for branch in merged_branches if branch != target_branch)
@@ -155,9 +165,7 @@ class Git:
         remote_prefix = f'{remote_name}/'
         remote_branches_to_delete = [
             'refs/heads/' + remote_slash_branch[len(remote_prefix):]
-            for remote_slash_branch
-            in branch_names
-            if remote_slash_branch.startswith(remote_prefix)
+            for remote_slash_branch in branch_names if remote_slash_branch.startswith(remote_prefix)
         ]
         if not remote_branches_to_delete:
             return

@@ -131,6 +131,30 @@ class Git:
             return None  # detached head
         return reference[len(expected_prefix):]
 
+    def find_working_tree_branches(self) -> List[Optional[str]]:
+        argv = [self._GIT, 'worktree', 'list', '--porcelain']  # requires Git >=2.7.0
+        output_bytes = self._subprocess_check_output(argv, is_write=False)
+        lines = self._output_bytes_to_lines(output_bytes)
+
+        detached_line_prefix = 'detached'
+        branch_line_prefix = 'branch '
+        branch_prefix = 'refs/heads/'
+        branch_names: List[Optional[str]] = []
+
+        for line in lines:
+            if line.startswith(detached_line_prefix):
+                branch_names.append(None)
+            elif line.startswith(branch_line_prefix):
+                branch_name = line[len(branch_line_prefix):]
+                if branch_name.startswith(branch_prefix):
+                    branch_name = branch_name[len(branch_prefix):]
+                branch_names.append(branch_name)
+
+        return branch_names
+
+    def has_detached_heads(self) -> bool:
+        return None in self.find_working_tree_branches()
+
     def _get_merged_branches_for(self, target_branch: str, remote: bool):
         extra_argv = []
         if remote:

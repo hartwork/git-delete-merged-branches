@@ -230,8 +230,7 @@ class DeleteMergedBranches:
             check_for_squash_merges = True
 
             if candidates_for_squashed_merges:
-                initial_branch = self._git.find_current_branch()
-                if initial_branch is None:
+                if self._git.has_detached_heads():
                     self._messenger.tell_info('Skipped further inspection of branches'
                                               ' because of detached HEAD.')
                     check_for_squash_merges = False
@@ -408,7 +407,7 @@ class DeleteMergedBranches:
             return
 
         initial_branch = self._git.find_current_branch()
-        if initial_branch is None:
+        if initial_branch is None or self._git.has_detached_heads():
             self._messenger.tell_info('Skipped refreshing branches because of detached HEAD.')
             return
 

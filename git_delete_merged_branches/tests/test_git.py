@@ -28,6 +28,32 @@ class FindBranchesTest(TestCase):
         self.assertEqual(actual_branches, expected_branches)
 
 
+class FindWorkingTreeBranchesTest(TestCase):
+    def test_find_branches_drops_head(self):
+        expected_branches = [None, 'branch-arrow-shift', 'refactor-layout-window']
+        git = Git(Messenger(colorize=False), pretend=True, verbose=False)
+        command_output_to_inject = dedent("""
+            worktree /tmp/tmp.mgTEbE434g/pymux
+            HEAD 493723318912cb44b1a3e47ba3fbc0e50b2a8f5c
+            detached
+
+            worktree /tmp/tmp.mgTEbE434g/branch-arrow-shift
+            HEAD 3f66e62b9de4b2251c7f9afad6c516dc5a30ec67
+            branch refs/heads/branch-arrow-shift
+
+            worktree /tmp/tmp.mgTEbE434g/refactor-layout-window
+            HEAD 3f66e62b9de4b2251c7f9afad6c516dc5a30ec67
+            branch refs/heads/refactor-layout-window
+
+        """).encode('utf-8')  # with two trialing newlines like Git would do
+        assert isinstance(command_output_to_inject, bytes)
+
+        with patch.object(subprocess, 'check_output', return_value=command_output_to_inject):
+            actual_branches = git.find_working_tree_branches()
+
+        self.assertEqual(actual_branches, expected_branches)
+
+
 class OutputBytesToLinesTest(TestCase):
     @parameterized.expand([
         (b'one\ntwo', ['one', 'two']),

@@ -230,8 +230,7 @@ class DeleteMergedBranches:
             check_for_squash_merges = True
 
             if candidates_for_squashed_merges:
-                initial_branch = self._git.find_current_branch()
-                if initial_branch is None:
+                if self._git.has_detached_heads():
                     self._messenger.tell_info('Skipped further inspection of branches'
                                               ' because of detached HEAD.')
                     check_for_squash_merges = False
@@ -292,14 +291,14 @@ class DeleteMergedBranches:
         self._messenger.tell_info(info_text)
 
     def _delete_local_merged_branches_for(self, required_target_branches, excluded_branches):
-        current_branch = self._git.find_current_branch()
-        current_branch_would_be_analyzed = (current_branch is not None
-                                            and current_branch not in required_target_branches
-                                            and current_branch not in excluded_branches)
-        if current_branch_would_be_analyzed:
-            excluded_branches = excluded_branches | {current_branch}
-            self._messenger.tell_info(f'Skipped branch {current_branch!r} '
-                                      'because it is currently checked out.')
+        for working_tree_branch in self._git.find_working_tree_branches():
+            branch_would_be_analyzed = (working_tree_branch is not None
+                                        and working_tree_branch not in required_target_branches
+                                        and working_tree_branch not in excluded_branches)
+            if branch_would_be_analyzed:
+                excluded_branches = excluded_branches | {working_tree_branch}
+                self._messenger.tell_info(f'Skipped branch {working_tree_branch!r} '
+                                          'because it is currently checked out.')
 
         truly_merged, defacto_merged = (self._find_branches_merged_to_all_targets_for_single_remote(
             required_target_branches, excluded_branches, remote_name=None))
@@ -408,7 +407,7 @@ class DeleteMergedBranches:
             return
 
         initial_branch = self._git.find_current_branch()
-        if initial_branch is None:
+        if initial_branch is None or self._git.has_detached_heads():
             self._messenger.tell_info('Skipped refreshing branches because of detached HEAD.')
             return
 

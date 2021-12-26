@@ -9,6 +9,12 @@ A convenient command-line tool helping you keep repositories clean.
 # pip install git-delete-merged-branches
 ```
 
+If you're an **Arch Linux** user, then you can install
+git-delete-merged-branches from the
+[AUR](https://aur.archlinux.org/packages/git-delete-merged-branches/):
+```console
+# yay install git-delete-merged-branches
+```
 
 # Example
 

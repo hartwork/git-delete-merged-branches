@@ -12,10 +12,10 @@ A convenient command-line tool helping you keep repositories clean.
 If you are using one of the GNU/Linux distributions below, you can install
 `git-delete-merged-branches` through the respective package manager, e.g.:
 
-
- - [Arch Linux (AUR)](https://aur.archlinux.org/packages/git-delete-merged-branches/) — 
+ - [Arch Linux (AUR)](https://aur.archlinux.org/packages/git-delete-merged-branches/) —
    `# yay -S git-delete-merged-branches`
  - [NixOS](https://github.com/hartwork/nixpkgs/blob/master/pkgs/applications/version-management/git-and-tools/git-delete-merged-branches/default.nix)
+
 
 # Example
 

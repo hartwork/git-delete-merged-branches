@@ -26,6 +26,7 @@ def add_color_to_formatter_class(formatter_class):
     class_name = formatter_class.__name__.replace('Formatter', 'ColorFormatter')
 
     class Class(formatter_class):
+
         def format_help(self):
             text = super().format_help()
             for pattern, replacement in _SUBSTITUTIONS:

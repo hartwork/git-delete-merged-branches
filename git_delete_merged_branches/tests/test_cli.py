@@ -10,6 +10,7 @@ from .._cli import _parse_command_line
 
 
 class HelpOutputTest(TestCase):
+
     def test_help(self):
         with patch.object(sys, 'stdout', StringIO()) as mock_stdout, self.assertRaises(SystemExit):
             _parse_command_line(colorize=True, args=['--help'])

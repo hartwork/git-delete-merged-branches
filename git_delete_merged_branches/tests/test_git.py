@@ -15,6 +15,7 @@ from .helpers import create_git, run_script
 
 
 class FindBranchesTest(TestCase):
+
     def test_find_branches_drops_head(self):
         existing_branches = ['remote1/HEAD', 'remote2/master']
         expected_branches = ['remote2/master']
@@ -29,6 +30,7 @@ class FindBranchesTest(TestCase):
 
 
 class FindWorkingTreeBranchesTest(TestCase):
+
     def test_find_branches_drops_head(self):
         expected_branches = [None, 'branch-arrow-shift', 'refactor-layout-window']
         git = Git(Messenger(colorize=False), pretend=True, verbose=False)
@@ -55,6 +57,7 @@ class FindWorkingTreeBranchesTest(TestCase):
 
 
 class OutputBytesToLinesTest(TestCase):
+
     @parameterized.expand([
         (b'one\ntwo', ['one', 'two']),
         (b'one\ntwo\n', ['one', 'two']),
@@ -68,6 +71,7 @@ class OutputBytesToLinesTest(TestCase):
 
 
 class ExtractGitConfigTest(TestCase):
+
     def test_escapes(self):
         expected_config = {
             'z.singlequote': '\'',
@@ -99,6 +103,7 @@ class ExtractGitConfigTest(TestCase):
 
 
 class RemoteBranchCollidesWithATagTest(TestCase):
+
     def test_remote_branch_deletable_despite_existing_tag_with_the_same_name(self):
         setup_script = dedent("""\
             mkdir upstream

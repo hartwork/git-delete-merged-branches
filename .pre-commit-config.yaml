@@ -21,8 +21,8 @@ repos:
     hooks:
       - id: flake8
 
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.9.3
+  - repo: https://github.com/pycqa/isort
+    rev: 5.9.3
     hooks:
       - id: isort
 

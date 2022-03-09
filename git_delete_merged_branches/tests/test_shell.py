@@ -9,6 +9,7 @@ from .._shell import escape_for_shell_display
 
 
 class ShellEscapingTest(TestCase):
+
     @parameterized.expand([
         ('', "''"),
         ('one', 'one'),

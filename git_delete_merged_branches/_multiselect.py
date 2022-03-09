@@ -26,6 +26,7 @@ class _LineRenderProcessor(Processor):
     """
     A Prompt Toolkit input processor for Buffer that formats lines for display to the user.
     """
+
     def __init__(self, prompt: '_MultiSelectPrompt'):
         self._prompt = prompt
 
@@ -74,6 +75,7 @@ class _LineJumpingBuffer(Buffer):
     A Prompt Toolkit Buffer that will skip all but the first search match per line
     when iterating search matches using keys "n" and "N".
     """
+
     def apply_search(
         self,
         search_state: SearchState,
@@ -104,6 +106,7 @@ class _MultiSelectPrompt:
     """
     An interactive multi-select using the terminal, based on Prompt Toolkit.
     """
+
     @dataclass
     class _LineBase(ABC):
         text: str
@@ -275,8 +278,10 @@ class _MultiSelectPrompt:
         return [item.value for item in self._items if item.selected]
 
     def _create_document_class(self, prompt: '_MultiSelectPrompt') -> Document:
+
         class ItemOnlySearchDocument(Document):
             """A Document that suppresses search results from non-item lines"""
+
             def _skip_non_item_matches(self, func: Callable, count: int) -> Optional[int]:
                 while True:
                     index = func(count=count)

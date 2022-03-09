@@ -15,6 +15,7 @@ _RESET_COLOR = colorama.Style.RESET_ALL
 
 
 class Messenger:
+
     def __init__(self, colorize):
         self._colorize = colorize
 

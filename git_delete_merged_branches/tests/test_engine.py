@@ -13,6 +13,7 @@ from .helpers import create_dmb, create_git, run_script
 
 
 class MergeDetectionTest(TestCase):
+
     def test_effort_1_truly_merged(self):
         setup_script = dedent("""
             git init
@@ -165,6 +166,7 @@ class MergeDetectionTest(TestCase):
 
 
 class RefreshTargetBranchesTest(TestCase):
+
     def test_refresh_gets_branches_back_in_sync(self):
         setup_script = dedent("""
             mkdir upstream
@@ -215,6 +217,7 @@ class RefreshTargetBranchesTest(TestCase):
 
 
 class GitConfigKeysContainDotsTest(TestCase):
+
     @parameterized.expand([
         (DeleteMergedBranches.find_required_branches, 'branch.release-1.0.x.dmb-required',
          'release-1.0.x'),

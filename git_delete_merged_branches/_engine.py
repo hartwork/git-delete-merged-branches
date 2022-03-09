@@ -22,16 +22,19 @@ class _GitRepositoryWithoutBranches(_DmbException):
     Exception for the time between "git init" and the first "git commit"
     where "git branch" will tell us that there are no branches
     """
+
     def __init__(self):
         super().__init__('This Git repository does not have any branches.')
 
 
 class _NoSuchBranchException(_DmbException):
+
     def __init__(self, branch_name):
         super().__init__(f'There is no branch {branch_name!r}.')
 
 
 class _NoSuchRemoteException(_DmbException):
+
     def __init__(self, remote_name):
         super().__init__(f'There is no remote {remote_name!r}.')
 
@@ -41,6 +44,7 @@ class _TooFewOptionsAvailable(_DmbException):
 
 
 class _ZeroMergeTargetsException(_DmbException):
+
     def __init__(self):
         super().__init__('One or more existing target branch is required.')
 

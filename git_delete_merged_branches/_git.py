@@ -56,7 +56,7 @@ class Git:
         return self._wrap_subprocess(subprocess.check_output,
                                      argv=argv,
                                      is_write=is_write,
-                                     pretend_result=bytes(),
+                                     pretend_result=b'',
                                      env=env)
 
     def _subprocess_check_call(self, argv, is_write, env=None):

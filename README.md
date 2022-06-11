@@ -14,7 +14,7 @@ If you are using one of the GNU/Linux distributions below, you can install
 
  - [Arch Linux (AUR)](https://aur.archlinux.org/packages/git-delete-merged-branches/) —
    `# yay -S git-delete-merged-branches`
- - [NixOS](https://github.com/hartwork/nixpkgs/blob/master/pkgs/applications/version-management/git-and-tools/git-delete-merged-branches/default.nix)
+ - [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/version-management/git-and-tools/git-delete-merged-branches/default.nix)
 
 
 # Example

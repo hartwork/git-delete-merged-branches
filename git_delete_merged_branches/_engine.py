@@ -53,9 +53,9 @@ class DeleteMergedBranches:
     _CONFIG_KEY_CONFIGURED = 'delete-merged-branches.configured'
     _CONFIG_VALUE_CONFIGURED = '5.0.0+'  # i.e. most ancient version with compatible config
     _CONFIG_VALUE_TRUE = 'true'
-    _PATTERN_REMOTE_ENABLED = '^remote.(?P<name>[^ ]+).dmb-enabled$'
-    _PATTERN_BRANCH_EXCLUDED = '^branch.(?P<name>[^ ]+).dmb-excluded$'
-    _PATTERN_BRANCH_REQUIRED = '^branch.(?P<name>[^ ]+).dmb-required$'
+    _PATTERN_REMOTE_ENABLED = '^remote\\.(?P<name>[^ ]+)\\.dmb-enabled$'
+    _PATTERN_BRANCH_EXCLUDED = '^branch\\.(?P<name>[^ ]+)\\.dmb-excluded$'
+    _PATTERN_BRANCH_REQUIRED = '^branch\\.(?P<name>[^ ]+)\\.dmb-required$'
     _FORMAT_REMOTE_ENABLED = 'remote.{name}.dmb-enabled'
     _FORMAT_BRANCH_EXCLUDED = 'branch.{name}.dmb-excluded'
     _FORMAT_BRANCH_REQUIRED = 'branch.{name}.dmb-required'

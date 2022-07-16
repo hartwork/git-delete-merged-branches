@@ -92,11 +92,13 @@ class Git:
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         return self._output_bytes_to_lines(output_bytes)
 
-    def _find_branches(self, extra_argv=None) -> List[str]:
+    def _find_branches(self, extra_argv=None, strip_left: int = 2) -> List[str]:
+        # strip_left==1 strips leading "refs/"
+        # strip_left==2 strips leading "refs/heads/" and "refs/remotes/"
         argv = [
             self._GIT,
             'branch',
-            '--format=%(refname:lstrip=2)',
+            f'--format=%(refname:lstrip={strip_left})',
         ]
         if extra_argv is not None:
             argv += extra_argv

@@ -464,8 +464,10 @@ class DeleteMergedBranches:
             if invalid_branches:
                 raise _NoSuchBranchException(sorted(invalid_branches)[0])
         else:
-            excluded_branches_set = (set(self.find_excluded_branches(git_config))
-                                     & existing_branches)
+            excluded_branches_set = set()
+
+        excluded_branches_set |= (set(self.find_excluded_branches(git_config)) & existing_branches)
+
         return excluded_branches_set
 
     def determine_required_target_branches(self, git_config: dict,

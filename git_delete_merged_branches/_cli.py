@@ -85,8 +85,8 @@ def _parse_command_line(colorize: bool, args=None):
                        dest='excluded_branches',
                        default=[],
                        action='append',
-                       help=('exclude the given branch from deletion'
-                             ' (instead of what is configured for this repository)'
+                       help=('exclude the given branch from deletion (in addition to'
+                             ' the exclusion list that is configured for this repository)'
                              '; can be passed multiple times'))
 
     switches = parser.add_argument_group('flags')

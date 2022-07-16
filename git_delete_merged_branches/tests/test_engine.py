@@ -5,6 +5,7 @@ import os
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 from unittest import TestCase
+from unittest.mock import Mock
 
 from parameterized import parameterized
 
@@ -232,3 +233,35 @@ class GitConfigKeysContainDotsTest(TestCase):
             git_config_dict_key: 'true',
         }
         self.assertEqual(extractor_function(git_config_dict), [expected_value])
+
+
+class DetermineExcludedBranchesTest(TestCase):
+
+    @parameterized.expand([
+        ('git config exclude', ['b1', 'b2', 'b3'], ['b1', 'b3'], [], [], {'b1', 'b3'}),
+        ('--exclude', ['b1', 'b2', 'b3'], [], ['b1', 'b3'], [], {'b1', 'b3'}),
+        ('--exclude + config exclude', ['b1', 'b2', 'b3'], ['b1'], ['b3'], [], {'b1', 'b3'}),
+        ('--include-regex match full', ['b1', 'b2', 'b3'], [], [], ['^..$', '^b2$'], {'b1', 'b3'}),
+        ('--include-regex match partial', ['b1', 'b2', 'b3'], [], [], [r'\d', 'b'], set()),
+        ('--include-regex mismatch', ['b1', 'b2', 'b3'], [], [], ['^b1$',
+                                                                  '^b2$'], {'b1', 'b2', 'b3'}),
+        ('--include-regex + --exclude + config exclude', ['b1', 'b2', 'b3'], ['b1'], ['b3'],
+         [r'^b\d$'], {'b1', 'b3'}),
+    ])
+    def test(self, _label, existing_branches, excluded_branches_from_config,
+             excluded_branches_extra, included_branches_patterns, expected_exclusion_set):
+        git_mock = Mock(find_all_branch_names=Mock(return_value=existing_branches))
+        dmb = DeleteMergedBranches(git=git_mock,
+                                   messenger=Mock(),
+                                   confirmation=Mock(),
+                                   effort_level=999)
+        git_config = {
+            DeleteMergedBranches._FORMAT_BRANCH_EXCLUDED.format(name=branch_name):
+            DeleteMergedBranches._CONFIG_VALUE_TRUE
+            for branch_name in excluded_branches_from_config
+        }
+
+        actual_exclusion_set = dmb.determine_excluded_branches(git_config, excluded_branches_extra,
+                                                               included_branches_patterns)
+
+        self.assertEqual(actual_exclusion_set, expected_exclusion_set)

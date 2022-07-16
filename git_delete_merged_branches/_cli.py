@@ -88,6 +88,16 @@ def _parse_command_line(colorize: bool, args=None):
                        help=('exclude the given branch from deletion (in addition to'
                              ' the exclusion list that is configured for this repository)'
                              '; can be passed multiple times'))
+    scope.add_argument('--include-regex',
+                       metavar='PATTERN',
+                       dest='included_branches_patterns',
+                       default=[],
+                       action='append',
+                       help=('only consider branches for deletion that match the given'
+                             ' regular expression (e.g. "^issue-")'
+                             '; syntax is that of Python module "re"'
+                             '; can be passed multiple times'
+                             ', then acts in logical conjunction ("and")'))
 
     switches = parser.add_argument_group('flags')
     switches.add_argument('--debug',
@@ -125,7 +135,8 @@ def _innermost_main(config, messenger):
 
     required_target_branches = dmb.determine_required_target_branches(
         git_config, config.required_target_branches)
-    excluded_branches = dmb.determine_excluded_branches(git_config, config.excluded_branches)
+    excluded_branches = dmb.determine_excluded_branches(git_config, config.excluded_branches,
+                                                        config.included_branches_patterns)
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 
     dmb.refresh_remotes(enabled_remotes)

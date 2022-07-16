@@ -49,6 +49,13 @@ class _ZeroMergeTargetsException(_DmbException):
         super().__init__('One or more existing target branch is required.')
 
 
+class _InvalidRegexPattern(_DmbException):
+
+    def __init__(self, pattern):
+        super().__init__(f'Pattern "{pattern}" is not well-formed regular expression syntax '
+                         '(with regard to Python module "re").')
+
+
 class DeleteMergedBranches:
     _CONFIG_KEY_CONFIGURED = 'delete-merged-branches.configured'
     _CONFIG_VALUE_CONFIGURED = '5.0.0+'  # i.e. most ancient version with compatible config
@@ -455,8 +462,8 @@ class DeleteMergedBranches:
             self._delete_remote_merged_branches_for(required_target_branches, excluded_branches,
                                                     remote_name, all_branch_names)
 
-    def determine_excluded_branches(self, git_config: dict,
-                                    excluded_branches: List[str]) -> Set[str]:
+    def determine_excluded_branches(self, git_config: dict, excluded_branches: List[str],
+                                    included_branches_patterns: List[str]) -> Set[str]:
         existing_branches = set(self._git.find_local_branches())
         if excluded_branches:
             excluded_branches_set = set(excluded_branches)
@@ -467,6 +474,20 @@ class DeleteMergedBranches:
             excluded_branches_set = set()
 
         excluded_branches_set |= (set(self.find_excluded_branches(git_config)) & existing_branches)
+
+        # The inclusion patterns are meant to work in logical conjunction ("and") but an empty
+        # list should not exclude any branches.  So we'll add any existing branch to the exclusion
+        # set that fails to match any of the inclusion patterns:
+        for included_branches_pattern in included_branches_patterns:
+            try:
+                matcher = re.compile(included_branches_pattern)
+            except re.error:
+                raise _InvalidRegexPattern(included_branches_pattern)
+
+            for branch_name in existing_branches:
+                if matcher.search(branch_name):
+                    continue
+                excluded_branches_set.add(branch_name)
 
         return excluded_branches_set
 

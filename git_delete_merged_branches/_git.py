@@ -4,7 +4,7 @@
 import os
 import subprocess
 from collections import OrderedDict
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from ._metadata import APP
 
@@ -113,6 +113,19 @@ class Git:
 
     def find_all_branch_refs(self) -> List[str]:
         return self._find_branches(['--all'])
+
+    def find_all_branch_names(self) -> Set[str]:
+        branch_names = set()
+        for line in self._find_branches(['--all'], strip_left=1):
+            heads_or_remotes, *remainder = line.split('/')
+            if heads_or_remotes == 'heads':
+                branch_name = '/'.join(remainder)
+            elif heads_or_remotes == 'remotes':
+                branch_name = '/'.join(remainder[1:])
+            else:
+                raise ValueError(f'Reference {line!r} not understood')
+            branch_names.add(branch_name)
+        return branch_names
 
     def find_remote_branches_at(self, remote_name) -> List[str]:
         assert remote_name

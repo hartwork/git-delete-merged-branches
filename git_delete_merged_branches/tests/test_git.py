@@ -5,7 +5,7 @@ import subprocess
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 from parameterized import parameterized
 
@@ -27,6 +27,26 @@ class FindBranchesTest(TestCase):
             actual_branches = git._find_branches()
 
         self.assertEqual(actual_branches, expected_branches)
+
+
+class FindBranchNamesTest(TestCase):
+
+    def test(self):
+        find_branches_lines = [
+            'heads/b1',
+            'heads/b2',
+            'remotes/remote1/b3',
+            'remotes/remote2/b1',
+        ]
+        expected = {'b1', 'b2', 'b3'}
+        git = Git(messenger=Mock(), pretend=True, verbose=False)
+
+        with patch.object(git, '_find_branches',
+                          return_value=find_branches_lines) as find_branches_mock:
+            actual = git.find_all_branch_names()
+
+        self.assertEqual(actual, expected)
+        self.assertEqual(find_branches_mock.call_args_list, [call(['--all'], strip_left=1)])
 
 
 class FindWorkingTreeBranchesTest(TestCase):

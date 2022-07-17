@@ -115,7 +115,7 @@ class DeleteMergedBranches:
             raise _GitRepositoryWithoutBranches
 
     def _configure_excluded_branches(self, git_config, new_required_branches: Set[str]):
-        valid_names = sorted(set(self._git.find_local_branches()) - new_required_branches)
+        valid_names = sorted(set(self._git.find_all_branch_names()) - new_required_branches)
         self._interactively_edit_list(
             '[2/3] Which of these branches (if any)'
             ' should be kept around at all times?',
@@ -464,7 +464,7 @@ class DeleteMergedBranches:
 
     def determine_excluded_branches(self, git_config: dict, excluded_branches: List[str],
                                     included_branches_patterns: List[str]) -> Set[str]:
-        existing_branches = set(self._git.find_local_branches())
+        existing_branches = set(self._git.find_all_branch_names())
         if excluded_branches:
             excluded_branches_set = set(excluded_branches)
             invalid_branches = excluded_branches_set - existing_branches

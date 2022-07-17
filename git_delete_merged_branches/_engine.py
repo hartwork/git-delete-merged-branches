@@ -341,8 +341,8 @@ class DeleteMergedBranches:
             self._report_branches_as_deleted(truly_merged | defacto_merged)
 
     def _delete_remote_merged_branches_for(self, required_target_branches, excluded_branches,
-                                           remote_name, all_branch_names: Set[str]):
-        if not all((f'{remote_name}/{branch_name}' in all_branch_names)
+                                           remote_name, all_branch_refs: Set[str]):
+        if not all((f'{remote_name}/{branch_name}' in all_branch_refs)
                    for branch_name in required_target_branches):
             self._messenger.tell_info(f'Skipped remote {remote_name!r} '
                                       'as it does not have all required branches.')
@@ -457,10 +457,10 @@ class DeleteMergedBranches:
 
     def delete_merged_branches(self, required_target_branches, excluded_branches, enabled_remotes):
         self._delete_local_merged_branches_for(required_target_branches, excluded_branches)
-        all_branch_names = set(self._git.find_all_branches())
+        all_branch_refs = set(self._git.find_all_branch_refs())
         for remote_name in enabled_remotes:
             self._delete_remote_merged_branches_for(required_target_branches, excluded_branches,
-                                                    remote_name, all_branch_names)
+                                                    remote_name, all_branch_refs)
 
     def determine_excluded_branches(self, git_config: dict, excluded_branches: List[str],
                                     included_branches_patterns: List[str]) -> Set[str]:

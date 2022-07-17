@@ -111,7 +111,7 @@ class Git:
     def find_local_branches(self) -> List[str]:
         return self._find_branches()
 
-    def find_all_branches(self) -> List[str]:
+    def find_all_branch_refs(self) -> List[str]:
         return self._find_branches(['--all'])
 
     def find_remote_branches_at(self, remote_name) -> List[str]:

@@ -4,7 +4,7 @@
 import os
 import subprocess
 from collections import OrderedDict
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from ._metadata import APP
 
@@ -92,11 +92,13 @@ class Git:
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         return self._output_bytes_to_lines(output_bytes)
 
-    def _find_branches(self, extra_argv=None) -> List[str]:
+    def _find_branches(self, extra_argv=None, strip_left: int = 2) -> List[str]:
+        # strip_left==1 strips leading "refs/"
+        # strip_left==2 strips leading "refs/heads/" and "refs/remotes/"
         argv = [
             self._GIT,
             'branch',
-            '--format=%(refname:lstrip=2)',
+            f'--format=%(refname:lstrip={strip_left})',
         ]
         if extra_argv is not None:
             argv += extra_argv
@@ -109,8 +111,21 @@ class Git:
     def find_local_branches(self) -> List[str]:
         return self._find_branches()
 
-    def find_all_branches(self) -> List[str]:
+    def find_all_branch_refs(self) -> List[str]:
         return self._find_branches(['--all'])
+
+    def find_all_branch_names(self) -> Set[str]:
+        branch_names = set()
+        for line in self._find_branches(['--all'], strip_left=1):
+            heads_or_remotes, *remainder = line.split('/')
+            if heads_or_remotes == 'heads':
+                branch_name = '/'.join(remainder)
+            elif heads_or_remotes == 'remotes':
+                branch_name = '/'.join(remainder[1:])
+            else:
+                raise ValueError(f'Reference {line!r} not understood')
+            branch_names.add(branch_name)
+        return branch_names
 
     def find_remote_branches_at(self, remote_name) -> List[str]:
         assert remote_name

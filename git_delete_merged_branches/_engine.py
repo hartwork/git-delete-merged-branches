@@ -49,6 +49,13 @@ class _ZeroMergeTargetsException(_DmbException):
         super().__init__('One or more existing target branch is required.')
 
 
+class _InvalidRegexPattern(_DmbException):
+
+    def __init__(self, pattern):
+        super().__init__(f'Pattern "{pattern}" is not well-formed regular expression syntax '
+                         '(with regard to Python module "re").')
+
+
 class DeleteMergedBranches:
     _CONFIG_KEY_CONFIGURED = 'delete-merged-branches.configured'
     _CONFIG_VALUE_CONFIGURED = '5.0.0+'  # i.e. most ancient version with compatible config
@@ -108,7 +115,7 @@ class DeleteMergedBranches:
             raise _GitRepositoryWithoutBranches
 
     def _configure_excluded_branches(self, git_config, new_required_branches: Set[str]):
-        valid_names = sorted(set(self._git.find_local_branches()) - new_required_branches)
+        valid_names = sorted(set(self._git.find_all_branch_names()) - new_required_branches)
         self._interactively_edit_list(
             '[2/3] Which of these branches (if any)'
             ' should be kept around at all times?',
@@ -334,8 +341,8 @@ class DeleteMergedBranches:
             self._report_branches_as_deleted(truly_merged | defacto_merged)
 
     def _delete_remote_merged_branches_for(self, required_target_branches, excluded_branches,
-                                           remote_name, all_branch_names: Set[str]):
-        if not all((f'{remote_name}/{branch_name}' in all_branch_names)
+                                           remote_name, all_branch_refs: Set[str]):
+        if not all((f'{remote_name}/{branch_name}' in all_branch_refs)
                    for branch_name in required_target_branches):
             self._messenger.tell_info(f'Skipped remote {remote_name!r} '
                                       'as it does not have all required branches.')
@@ -450,22 +457,38 @@ class DeleteMergedBranches:
 
     def delete_merged_branches(self, required_target_branches, excluded_branches, enabled_remotes):
         self._delete_local_merged_branches_for(required_target_branches, excluded_branches)
-        all_branch_names = set(self._git.find_all_branches())
+        all_branch_refs = set(self._git.find_all_branch_refs())
         for remote_name in enabled_remotes:
             self._delete_remote_merged_branches_for(required_target_branches, excluded_branches,
-                                                    remote_name, all_branch_names)
+                                                    remote_name, all_branch_refs)
 
-    def determine_excluded_branches(self, git_config: dict,
-                                    excluded_branches: List[str]) -> Set[str]:
-        existing_branches = set(self._git.find_local_branches())
+    def determine_excluded_branches(self, git_config: dict, excluded_branches: List[str],
+                                    included_branches_patterns: List[str]) -> Set[str]:
+        existing_branches = set(self._git.find_all_branch_names())
         if excluded_branches:
             excluded_branches_set = set(excluded_branches)
             invalid_branches = excluded_branches_set - existing_branches
             if invalid_branches:
-                raise _NoSuchBranchException(excluded_branches[0])
+                raise _NoSuchBranchException(sorted(invalid_branches)[0])
         else:
-            excluded_branches_set = (set(self.find_excluded_branches(git_config))
-                                     & existing_branches)
+            excluded_branches_set = set()
+
+        excluded_branches_set |= (set(self.find_excluded_branches(git_config)) & existing_branches)
+
+        # The inclusion patterns are meant to work in logical conjunction ("and") but an empty
+        # list should not exclude any branches.  So we'll add any existing branch to the exclusion
+        # set that fails to match any of the inclusion patterns:
+        for included_branches_pattern in included_branches_patterns:
+            try:
+                matcher = re.compile(included_branches_pattern)
+            except re.error:
+                raise _InvalidRegexPattern(included_branches_pattern)
+
+            for branch_name in existing_branches:
+                if matcher.search(branch_name):
+                    continue
+                excluded_branches_set.add(branch_name)
+
         return excluded_branches_set
 
     def determine_required_target_branches(self, git_config: dict,

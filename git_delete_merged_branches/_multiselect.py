@@ -12,10 +12,13 @@ from prompt_toolkit.filters import is_searching
 from prompt_toolkit.formatted_text.base import StyleAndTextTuples
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import HSplit, Layout, Window
-from prompt_toolkit.layout.containers import VerticalAlign
+from prompt_toolkit.layout.containers import Container, VerticalAlign
 from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.mouse_handlers import MouseHandlers
 from prompt_toolkit.layout.processors import Processor, Transformation, TransformationInput
+from prompt_toolkit.layout.screen import Screen, WritePosition
+from prompt_toolkit.layout.scrollable_pane import ScrollablePane, ScrollOffsets
 from prompt_toolkit.search import SearchState
 from prompt_toolkit.widgets import SearchToolbar
 
@@ -114,6 +117,33 @@ class _LineJumpingBuffer(Buffer):
             previous_line_index = current_line_index
 
 
+class _HeightTrackingScrollablePane(ScrollablePane):
+    """
+    A copy of ``ScrollablePane`` that remembers the latest rendering height.
+    """
+
+    def __init__(self, content: Container, **kwargs):
+        super().__init__(content=content, **kwargs)
+        self.current_height = None
+
+    def write_to_screen(
+        self,
+        screen: Screen,
+        mouse_handlers: MouseHandlers,
+        write_position: WritePosition,
+        parent_style: str,
+        erase_bg: bool,
+        z_index: Optional[int],
+    ) -> None:
+        self.current_height = write_position.height
+        super().write_to_screen(screen=screen,
+                                mouse_handlers=mouse_handlers,
+                                write_position=write_position,
+                                parent_style=parent_style,
+                                erase_bg=erase_bg,
+                                z_index=z_index)
+
+
 class _MultiSelectPrompt:
     """
     An interactive multi-select using the terminal, based on Prompt Toolkit.
@@ -153,14 +183,15 @@ class _MultiSelectPrompt:
         self._header_lines: [_MultiSelectPrompt.HeaderLine] = []
         self._footer_lines: [_MultiSelectPrompt.PlainLine] = []
 
-        self._item_selection_window: Optional[Window] = None
+        self._item_selection_pane: Optional[_HeightTrackingScrollablePane] = None
         self._buffer: Optional[Buffer] = None
         self._document: Optional[Document] = None
         self._accepted_selection: List[Any] = None
 
     def _move_cursor_one_page_vertically(self, upwards: bool):
-        render_cursor_line = self._item_selection_window.render_info.cursor_position.y
-        page_height_in_lines = self._item_selection_window.render_info.window_height
+        render_cursor_line = (self._item_selection_pane.content.render_info.cursor_position.y
+                              - self._item_selection_pane.vertical_scroll)
+        page_height_in_lines = self._item_selection_pane.current_height
 
         if upwards and render_cursor_line > 0:
             new_line_index = self.get_cursor_line() - render_cursor_line
@@ -279,7 +310,7 @@ class _MultiSelectPrompt:
                       wrap_lines=True,
                       height=Dimension(min=len(lines), max=len(lines)))
 
-    def _create_layout(self) -> Tuple[Layout, Window]:
+    def _create_layout(self) -> Tuple[Layout, _HeightTrackingScrollablePane]:
         header = self._create_text_display_window_for(self._header_lines)
         footer = self._create_text_display_window_for(self._footer_lines)
 
@@ -288,18 +319,23 @@ class _MultiSelectPrompt:
                                        input_processors=[_ItemRenderProcessor(prompt=self)],
                                        preview_search=True,
                                        search_buffer_control=search.control)
-        window_height = Dimension(min=1,
-                                  max=self._document.line_count,
-                                  preferred=self._document.line_count)
-        item_selection_window = Window(buffer_control,
-                                       always_hide_cursor=True,
-                                       wrap_lines=True,
-                                       height=window_height)
-        item_selection_window_plus_search = HSplit([item_selection_window, search])
-        hsplit = HSplit([header, item_selection_window_plus_search, footer],
+        item_selection_window = Window(buffer_control, always_hide_cursor=True, wrap_lines=True)
+
+        pane_scroll_offsets = ScrollOffsets(top=0, bottom=0)
+        pane_height = Dimension(min=1,
+                                max=self._document.line_count,
+                                preferred=self._document.line_count)
+        item_selection_pane = _HeightTrackingScrollablePane(item_selection_window,
+                                                            height=pane_height,
+                                                            scroll_offsets=pane_scroll_offsets)
+        item_selection_pane.show_scrollbar = lambda: (item_selection_pane.current_height or 0
+                                                      ) < self._document.line_count
+
+        item_selection_pane_plus_search = HSplit([item_selection_pane, search])
+        hsplit = HSplit([header, item_selection_pane_plus_search, footer],
                         padding=1,
                         align=VerticalAlign.TOP)
-        return Layout(hsplit, focused_element=item_selection_window), item_selection_window
+        return Layout(hsplit, focused_element=item_selection_pane), item_selection_pane
 
     def _collect_selected_values(self):
         return [item.value for item in self.item_lines if item.selected]
@@ -307,7 +343,7 @@ class _MultiSelectPrompt:
     def get_selected_values(self) -> List[Any]:
         self._document = Document(text='\n'.join(line.text for line in self.item_lines))
         self._buffer = _LineJumpingBuffer(read_only=True, document=self._document)
-        layout, self._item_selection_window = self._create_layout()
+        layout, self._item_selection_pane = self._create_layout()
         app = Application(key_bindings=self._create_key_bindings(), layout=layout)
 
         self._move_cursor_to_line(self._initial_cursor_item_index)

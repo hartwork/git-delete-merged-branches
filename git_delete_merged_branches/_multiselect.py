@@ -3,9 +3,7 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from functools import partial
-from typing import Any, Callable, List, Optional
-from unittest.mock import patch
+from typing import Any, List, Optional, Tuple
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
@@ -14,15 +12,20 @@ from prompt_toolkit.filters import is_searching
 from prompt_toolkit.formatted_text.base import StyleAndTextTuples
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import HSplit, Layout, Window
+from prompt_toolkit.layout.containers import Container, VerticalAlign
 from prompt_toolkit.layout.controls import BufferControl
+from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.mouse_handlers import MouseHandlers
 from prompt_toolkit.layout.processors import Processor, Transformation, TransformationInput
+from prompt_toolkit.layout.screen import Screen, WritePosition
+from prompt_toolkit.layout.scrollable_pane import ScrollablePane, ScrollOffsets
 from prompt_toolkit.search import SearchState
 from prompt_toolkit.widgets import SearchToolbar
 
 from ._messenger import Messenger
 
 
-class _LineRenderProcessor(Processor):
+class _ItemRenderProcessor(Processor):
     """
     A Prompt Toolkit input processor for Buffer that formats lines for display to the user.
     """
@@ -31,22 +34,16 @@ class _LineRenderProcessor(Processor):
         self._prompt = prompt
 
     def apply_transformation(self, transformation_input: TransformationInput) -> Transformation:
-        line_info = self._prompt.lines[transformation_input.lineno]
-        line_is_item = isinstance(line_info, self._prompt.ItemLine)
+        line_info = self._prompt.item_lines[transformation_input.lineno]
 
         new_fragments: StyleAndTextTuples = []
 
-        if line_is_item:
-            highlighted = transformation_input.lineno == self._prompt.get_cursor_line()
-            cursor = '▶' if highlighted else ' '
-            checkmark = 'x' if line_info.selected else ' '
-            fallback_style = (self._prompt.highlighted_style
-                              if highlighted else self._prompt.neutral_style)
-            new_fragments.append((fallback_style, f'{cursor} [{checkmark}] '))
-        elif isinstance(line_info, self._prompt.HeaderLine):
-            fallback_style = self._prompt.header_style
-        else:
-            fallback_style = self._prompt.neutral_style
+        highlighted = transformation_input.lineno == self._prompt.get_cursor_line()
+        cursor = '▶' if highlighted else ' '
+        checkmark = 'x' if line_info.selected else ' '
+        fallback_style = (self._prompt.highlighted_style
+                          if highlighted else self._prompt.neutral_style)
+        new_fragments.append((fallback_style, f'{cursor} [{checkmark}] '))
 
         # Apply new style where adequate
         for fragment in transformation_input.fragments:
@@ -55,17 +52,35 @@ class _LineRenderProcessor(Processor):
             # NOTE: The idea is to respect search result markers (that have been inserted
             #       by HighlightSearchProcessor or HighlightIncrementalSearchProcessor)
             #       in item text, and only there.
-            if line_is_item:
-                new_style = old_style or fallback_style
-            else:
-                new_style = fallback_style
-
+            new_style = old_style or fallback_style
             new_fragments.append((new_style, text))
 
         # Add right padding
-        if line_is_item:
-            padding_width = 2 + (self._prompt.peak_item_label_length - len(line_info.text))
-            new_fragments.append((fallback_style, ' ' * padding_width))
+        padding_width = 2 + (self._prompt.peak_item_label_length - len(line_info.text))
+        new_fragments.append((fallback_style, ' ' * padding_width))
+
+        return Transformation(fragments=new_fragments)
+
+
+class _NonItemRenderProcessor(Processor):
+    """
+    A Prompt Toolkit input processor for Buffer that formats lines for display to the user.
+    """
+
+    def __init__(self, prompt: '_MultiSelectPrompt', lines: List):
+        self._prompt = prompt
+        self._lines = lines
+
+    def apply_transformation(self, transformation_input: TransformationInput) -> Transformation:
+        line_info = self._lines[transformation_input.lineno]
+
+        if isinstance(line_info, self._prompt.HeaderLine):
+            new_style = self._prompt.header_style
+        else:
+            new_style = self._prompt.neutral_style
+
+        new_fragments: StyleAndTextTuples = [(new_style, text)
+                                             for _old_style, text in transformation_input.fragments]
 
         return Transformation(fragments=new_fragments)
 
@@ -102,6 +117,33 @@ class _LineJumpingBuffer(Buffer):
             previous_line_index = current_line_index
 
 
+class _HeightTrackingScrollablePane(ScrollablePane):
+    """
+    A copy of ``ScrollablePane`` that remembers the latest rendering height.
+    """
+
+    def __init__(self, content: Container, **kwargs):
+        super().__init__(content=content, **kwargs)
+        self.current_height = None
+
+    def write_to_screen(
+        self,
+        screen: Screen,
+        mouse_handlers: MouseHandlers,
+        write_position: WritePosition,
+        parent_style: str,
+        erase_bg: bool,
+        z_index: Optional[int],
+    ) -> None:
+        self.current_height = write_position.height
+        super().write_to_screen(screen=screen,
+                                mouse_handlers=mouse_handlers,
+                                write_position=write_position,
+                                parent_style=parent_style,
+                                erase_bg=erase_bg,
+                                z_index=z_index)
+
+
 class _MultiSelectPrompt:
     """
     An interactive multi-select using the terminal, based on Prompt Toolkit.
@@ -121,8 +163,6 @@ class _MultiSelectPrompt:
 
     @dataclass
     class ItemLine(_LineBase):
-        item_index: int
-        line_index: int
         value: Any
         selected: bool
 
@@ -138,24 +178,33 @@ class _MultiSelectPrompt:
         self._initial_cursor_item_index: int = initial_cursor_index
         self._min_selection_count: int = min_selection_count
 
-        self._items: List[_MultiSelectPrompt._ItemBase] = []
         self.peak_item_label_length: int = 0
-        self.lines: [_MultiSelectPrompt.ItemLine] = []
+        self.item_lines: [_MultiSelectPrompt.ItemLine] = []
+        self._header_lines: [_MultiSelectPrompt.HeaderLine] = []
+        self._footer_lines: [_MultiSelectPrompt.PlainLine] = []
 
+        self._item_selection_pane: Optional[_HeightTrackingScrollablePane] = None
         self._buffer: Optional[Buffer] = None
         self._document: Optional[Document] = None
         self._accepted_selection: List[Any] = None
 
     def _move_cursor_one_page_vertically(self, upwards: bool):
-        page_height_in_lines = 10
-        current_line_index = self.get_cursor_line()
+        render_cursor_line = (self._item_selection_pane.content.render_info.cursor_position.y
+                              - self._item_selection_pane.vertical_scroll)
+        page_height_in_lines = self._item_selection_pane.current_height
 
-        if upwards:
-            new_line_index = max(self._items[0].line_index,
-                                 current_line_index - page_height_in_lines)
+        if upwards and render_cursor_line > 0:
+            new_line_index = self.get_cursor_line() - render_cursor_line
+        elif not upwards and render_cursor_line < page_height_in_lines - 1:
+            new_line_index = self.get_cursor_line() + (page_height_in_lines - render_cursor_line
+                                                       - 1)
         else:
-            new_line_index = min(self._items[-1].line_index,
-                                 current_line_index + page_height_in_lines)
+            current_line_index = self.get_cursor_line()
+            if upwards:
+                new_line_index = max(0, current_line_index - page_height_in_lines)
+            else:
+                new_line_index = min(
+                    len(self.item_lines) - 1, current_line_index + page_height_in_lines)
 
         self._move_cursor_to_line(new_line_index)
 
@@ -168,25 +217,17 @@ class _MultiSelectPrompt:
         return row
 
     def _move_cursor_one_step_vertically(self, upwards: bool):
-        if len(self._items) < 2:
+        if len(self.item_lines) < 2:
             return
 
         current_line_index = self.get_cursor_line()
 
-        if upwards:
-            if current_line_index == 0:
-                return
-            candidates = range(current_line_index - 1, 0, -1)
-        else:
-            if current_line_index == len(self.lines) - 1:
-                return
-            candidates = range(current_line_index + 1, len(self.lines) - 1, +1)
+        # Can we even move any further in that direction?
+        if ((upwards and current_line_index == 0)
+                or (not upwards and current_line_index == len(self.item_lines) - 1)):
+            return
 
-        for candidate_line_index in candidates:
-            line_info = self.lines[candidate_line_index]
-            if isinstance(line_info, self.ItemLine):
-                self._move_cursor_to_line(candidate_line_index)
-                break
+        self._move_cursor_to_line(current_line_index + (-1 if upwards else 1))
 
     def _on_move_line_down(self, _event):
         self._move_cursor_one_step_vertically(upwards=False)
@@ -201,14 +242,14 @@ class _MultiSelectPrompt:
         self._move_cursor_one_page_vertically(upwards=False)
 
     def _on_move_to_first(self, _event):
-        self._move_cursor_to_line(self._items[0].line_index)
+        self._move_cursor_to_line(0)
 
     def _on_move_to_last(self, _event):
-        self._move_cursor_to_line(self._items[-1].line_index)
+        self._move_cursor_to_line(len(self.item_lines) - 1)
 
     def _on_toggle(self, _event):
         line_index = self.get_cursor_line()
-        line_info = self.lines[line_index]
+        line_info = self.item_lines[line_index]
         line_info.selected = not line_info.selected
 
     def _on_accept(self, event):
@@ -222,7 +263,7 @@ class _MultiSelectPrompt:
         event.app.exit()
 
     def add_header(self, text):
-        self.lines.append(self.HeaderLine(text))
+        self._header_lines.append(self.HeaderLine(text))
 
     def add_item(self, value: Any, label: str = None, selected: bool = False):
         if label is None:
@@ -230,17 +271,12 @@ class _MultiSelectPrompt:
 
         self.peak_item_label_length = max(self.peak_item_label_length, len(label))
 
-        item_line = self.ItemLine(selected=selected,
-                                  item_index=len(self._items),
-                                  line_index=len(self.lines),
-                                  text=label,
-                                  value=value)
+        item_line = self.ItemLine(selected=selected, text=label, value=value)
 
-        self.lines.append(item_line)
-        self._items.append(item_line)
+        self.item_lines.append(item_line)
 
-    def add_text(self, text):
-        self.lines.append(self.PlainLine(text))
+    def add_footer(self, text):
+        self._footer_lines.append(self.PlainLine(text))
 
     def _create_key_bindings(self):
         key_bindings = KeyBindings()
@@ -265,81 +301,55 @@ class _MultiSelectPrompt:
 
         return key_bindings
 
-    def _create_layout(self):
+    def _create_text_display_window_for(self, lines: List[_LineBase]) -> Window:
+        document = Document(text='\n'.join(line.text for line in lines))
+        buffer = Buffer(read_only=True, document=document)
+        buffer_control = BufferControl(
+            buffer=buffer, input_processors=[_NonItemRenderProcessor(prompt=self, lines=lines)])
+        return Window(buffer_control,
+                      wrap_lines=True,
+                      height=Dimension(min=len(lines), max=len(lines)))
+
+    def _create_layout(self) -> Tuple[Layout, _HeightTrackingScrollablePane]:
+        header = self._create_text_display_window_for(self._header_lines)
+        footer = self._create_text_display_window_for(self._footer_lines)
+
         search = SearchToolbar(ignore_case=True)
         buffer_control = BufferControl(buffer=self._buffer,
-                                       input_processors=[_LineRenderProcessor(prompt=self)],
+                                       input_processors=[_ItemRenderProcessor(prompt=self)],
                                        preview_search=True,
                                        search_buffer_control=search.control)
-        hsplit = HSplit([Window(buffer_control, always_hide_cursor=True, wrap_lines=True), search])
-        return Layout(hsplit)
+        item_selection_window = Window(buffer_control, always_hide_cursor=True, wrap_lines=True)
+
+        pane_scroll_offsets = ScrollOffsets(top=0, bottom=0)
+        pane_height = Dimension(min=1,
+                                max=self._document.line_count,
+                                preferred=self._document.line_count)
+        item_selection_pane = _HeightTrackingScrollablePane(item_selection_window,
+                                                            height=pane_height,
+                                                            scroll_offsets=pane_scroll_offsets)
+        item_selection_pane.show_scrollbar = lambda: (item_selection_pane.current_height or 0
+                                                      ) < self._document.line_count
+
+        item_selection_pane_plus_search = HSplit([item_selection_pane, search])
+        hsplit = HSplit([header, item_selection_pane_plus_search, footer],
+                        padding=1,
+                        align=VerticalAlign.TOP)
+        return Layout(hsplit, focused_element=item_selection_pane), item_selection_pane
 
     def _collect_selected_values(self):
-        return [item.value for item in self._items if item.selected]
-
-    def _create_document_class(self, prompt: '_MultiSelectPrompt') -> Document:
-
-        class ItemOnlySearchDocument(Document):
-            """A Document that suppresses search results from non-item lines"""
-
-            def _skip_non_item_matches(self, func: Callable, count: int) -> Optional[int]:
-                while True:
-                    index = func(count=count)
-                    if index is None:
-                        return None
-
-                    effective_index = index + self.cursor_position
-                    row, _col = self.translate_index_to_position(effective_index)
-                    if isinstance(prompt.lines[row], prompt.ItemLine):
-                        return index
-
-                    count += 1  # i.e. retry with next match
-
-            # override
-            def find(self,
-                     sub: str,
-                     in_current_line: bool = False,
-                     include_current_position: bool = False,
-                     ignore_case: bool = False,
-                     count: int = 1) -> Optional[int]:
-                func = partial(super().find,
-                               sub=sub,
-                               in_current_line=in_current_line,
-                               include_current_position=include_current_position,
-                               ignore_case=ignore_case)
-                return self._skip_non_item_matches(func, count)
-
-            # override
-            def find_backwards(
-                self,
-                sub: str,
-                in_current_line: bool = False,
-                ignore_case: bool = False,
-                count: int = 1,
-            ) -> Optional[int]:
-                func = partial(super().find_backwards,
-                               sub=sub,
-                               in_current_line=in_current_line,
-                               ignore_case=ignore_case)
-                return self._skip_non_item_matches(func, count)
-
-        return ItemOnlySearchDocument
+        return [item.value for item in self.item_lines if item.selected]
 
     def get_selected_values(self) -> List[Any]:
-        document_class = self._create_document_class(prompt=self)
-        self._document = document_class(text='\n'.join(line.text for line in self.lines))
+        self._document = Document(text='\n'.join(line.text for line in self.item_lines))
+        self._buffer = _LineJumpingBuffer(read_only=True, document=self._document)
+        layout, self._item_selection_pane = self._create_layout()
+        app = Application(key_bindings=self._create_key_bindings(), layout=layout)
 
-        # Prompt Toolkit's Buffer is calling "Document(..)" internally,
-        # and this patch will make it use our CustomSearchDocument everywhere.
-        with patch('prompt_toolkit.buffer.Document', document_class):
-            self._buffer = _LineJumpingBuffer(read_only=True, document=self._document)
-            app = Application(key_bindings=self._create_key_bindings(),
-                              layout=self._create_layout())
+        self._move_cursor_to_line(self._initial_cursor_item_index)
+        app.run()
 
-            self._move_cursor_to_line(self._items[self._initial_cursor_item_index].line_index)
-            app.run()
-
-            return self._accepted_selection
+        return self._accepted_selection
 
 
 def multiselect(messenger: Messenger, options: List[str], initial_selection: List[int], title: str,
@@ -354,11 +364,11 @@ def multiselect(messenger: Messenger, options: List[str], initial_selection: Lis
     )
 
     menu.add_header(title)
-    menu.add_text('')
+
     for i, option in enumerate(options):
         menu.add_item(option, selected=i in initial_selection)
-    menu.add_text('')
-    menu.add_text(help)
+
+    menu.add_footer(help)
 
     messenger.produce_air()
 

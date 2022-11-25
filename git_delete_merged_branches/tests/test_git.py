@@ -109,17 +109,27 @@ class ExtractGitConfigTest(TestCase):
             'z.backspace': chr(8),
         }
 
+        mock_messenger = Mock()
+
         with TemporaryDirectory() as d:
             subprocess.call(['git', 'init'], cwd=d)
-            git = Git(Messenger(colorize=False), pretend=False, verbose=False, work_dir=d)
+            git = Git(messenger=mock_messenger, pretend=False, verbose=True, work_dir=d)
             for k, v in expected_config.items():
                 git.set_config(k, v)
+
+            with open(os.path.join(d, '.git/config'), 'a') as f:
+                f.write('\tname-without-assignment')  # GitHub issue #96
+
             actual_config = {
                 k: v
                 for k, v in git.extract_git_config().items() if k in expected_config
             }
 
         self.assertEqual(actual_config, expected_config)
+
+        self.assertEqual(mock_messenger.tell_info.call_args_list, [
+            call('Git config option \'z.name-without-assignment\' lacks assignment of a value.'),
+        ])
 
 
 class RemoteBranchCollidesWithATagTest(TestCase):

@@ -107,6 +107,7 @@ class ExtractGitConfigTest(TestCase):
             'z.linefeed': '\n',
             'z.tab': '\t',
             'z.backspace': chr(8),
+            'z.empty': '',
         }
 
         mock_messenger = Mock()

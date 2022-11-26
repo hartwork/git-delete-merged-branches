@@ -6,6 +6,7 @@ import os
 import sys
 import traceback
 from argparse import RawDescriptionHelpFormatter
+from functools import partial
 from signal import SIGINT
 from subprocess import CalledProcessError
 from textwrap import dedent
@@ -18,6 +19,7 @@ from ._engine import DeleteMergedBranches
 from ._git import Git
 from ._messenger import Messenger
 from ._metadata import APP, DESCRIPTION, VERSION
+from ._multiselect import multiselect
 
 
 def _parse_command_line(colorize: bool, args=None):
@@ -124,10 +126,12 @@ def _parse_command_line(colorize: bool, args=None):
     return parser.parse_args(args)
 
 
-def _innermost_main(config, messenger):
+def _innermost_main(config, messenger, colorize: bool):
     git = Git(messenger, pretend=config.pretend, verbose=config.verbose)
     confirmation = Confirmation(messenger, ask=config.ask)
-    dmb = DeleteMergedBranches(git, messenger, confirmation, config.effort_level)
+    selector = partial(multiselect, colorize=colorize)
+
+    dmb = DeleteMergedBranches(git, messenger, confirmation, selector, config.effort_level)
 
     git_config = dmb.ensure_configured(config.force_reconfiguration)
     if config.force_reconfiguration:
@@ -154,7 +158,7 @@ def _inner_main():
 
     config = _parse_command_line(colorize=colorize)
     try:
-        _innermost_main(config, messenger)
+        _innermost_main(config, messenger, colorize)
     except CalledProcessError as e:
         # Produce more human-friendly output than str(e)
         message = f"Command '{' '.join(e.cmd)}' returned non-zero exit status {e.returncode}."

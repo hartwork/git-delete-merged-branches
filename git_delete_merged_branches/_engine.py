@@ -10,7 +10,6 @@ from typing import List, Optional, Set, Tuple
 
 from ._git import CheckoutFailed, PullFailed
 from ._metadata import APP
-from ._multiselect import multiselect
 
 
 class _DmbException(Exception):
@@ -67,10 +66,11 @@ class DeleteMergedBranches:
     _FORMAT_BRANCH_EXCLUDED = 'branch.{name}.dmb-excluded'
     _FORMAT_BRANCH_REQUIRED = 'branch.{name}.dmb-required'
 
-    def __init__(self, git, messenger, confirmation, effort_level):
+    def __init__(self, git, messenger, confirmation, selector, effort_level):
         self._confirmation = confirmation
         self._messenger = messenger
         self._git = git
+        self._selector = selector
         self._effort_using_git_cherry = effort_level >= 2
         self._effort_using_squashed_copies = effort_level >= 3
 
@@ -86,8 +86,8 @@ class DeleteMergedBranches:
         initial_selection = [i for i, name in enumerate(valid_names) if name in old_names]
         if valid_names:
             new_names = set(
-                multiselect(self._messenger, valid_names, initial_selection, description, help,
-                            min_selection_count))
+                self._selector(self._messenger, valid_names, initial_selection, description, help,
+                               min_selection_count))
         else:
             new_names = set()
         assert len(new_names) >= min_selection_count

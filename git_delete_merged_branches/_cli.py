@@ -25,7 +25,7 @@ def _parse_command_line(colorize: bool, args=None):
         Software libre licensed under GPL v3 or later.
         Brought to you by Sebastian Pipping <sebastian@pipping.org>.
 
-        Please report bugs at https://github.com/hartwork/{APP}.  Thank you!
+        Please report bugs at https://github.com/hartwork/{APP} — thank you!
     """)
 
     if args is None:

@@ -83,7 +83,14 @@ class Git:
         for key_newline_value in key_newline_value_list:
             if not key_newline_value:
                 continue
-            key, value = key_newline_value.split('\n', 1)
+
+            try:
+                key, value = key_newline_value.split('\n', 1)
+            except ValueError:
+                self._messenger.tell_info(
+                    f'Git config option {key_newline_value!r} lacks assignment of a value.')
+                continue
+
             git_config[key] = value
         return git_config
 

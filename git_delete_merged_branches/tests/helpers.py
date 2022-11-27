@@ -4,6 +4,7 @@
 import subprocess
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
+from unittest.mock import Mock
 
 from .._confirm import Confirmation
 from .._engine import DeleteMergedBranches
@@ -41,4 +42,5 @@ def create_dmb(git: Git, effort_level: int) -> DeleteMergedBranches:
     return DeleteMergedBranches(git,
                                 messenger=messenger,
                                 confirmation=confirmation,
+                                selector=Mock(),
                                 effort_level=effort_level)

@@ -254,6 +254,7 @@ class DetermineExcludedBranchesTest(TestCase):
         dmb = DeleteMergedBranches(git=git_mock,
                                    messenger=Mock(),
                                    confirmation=Mock(),
+                                   selector=Mock(),
                                    effort_level=999)
         git_config = {
             DeleteMergedBranches._FORMAT_BRANCH_EXCLUDED.format(name=branch_name):

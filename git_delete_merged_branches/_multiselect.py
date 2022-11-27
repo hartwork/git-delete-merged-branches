@@ -353,12 +353,12 @@ class _MultiSelectPrompt:
 
 
 def multiselect(messenger: Messenger, options: List[str], initial_selection: List[int], title: str,
-                help: str, min_selection_count: int) -> List[str]:
+                help: str, min_selection_count: int, colorize: bool) -> List[str]:
     assert len(options) >= min_selection_count
 
     menu = _MultiSelectPrompt(
-        highlighted_style='bold fg:black bg:white',
-        header_style='bold fg:ansibrightgreen',
+        highlighted_style='bold fg:black bg:white' if colorize else '',
+        header_style='bold fg:ansibrightgreen' if colorize else '',
         initial_cursor_index=initial_selection[0] if initial_selection else 0,
         min_selection_count=min_selection_count,
     )

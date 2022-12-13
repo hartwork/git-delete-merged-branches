@@ -56,4 +56,8 @@ setup(
         'Topic :: Software Development :: Version Control',
         'Topic :: Software Development :: Version Control :: Git',
     ],
+    data_files=[('share/man/man1', [
+        f'{APP}.1',
+        'git-dmb.1',
+    ])],
 )

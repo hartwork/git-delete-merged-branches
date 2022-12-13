@@ -1,0 +1,39 @@
+# Copyright (C) 2022 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under GPL v3 or later
+
+name: Enforce that copies of --help output are in sync
+
+on:
+- pull_request
+- push
+
+jobs:
+  run_pre_commit:
+    name: Check if copies of --help output are in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.11
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get install --no-install-recommends -y help2man
+
+      - name: Install delete-merged-branches entry point script
+        run: |-
+          pip install \
+            --disable-pip-version-check \
+            --user \
+            --no-warn-script-location \
+            .
+          echo "PATH=${HOME}/.local/bin:${PATH}" >> "${GITHUB_ENV}"
+
+      - name: Check if the man page is in sync with --help output
+        run: |-
+          rm git-{delete-merged-branches,dmb}.1  # to enforce a diff for the generator to remove
+          ./sync-manpage-with-help-output.sh
+          git diff --exit-code -- {delete-merged-branches,dmb}.1

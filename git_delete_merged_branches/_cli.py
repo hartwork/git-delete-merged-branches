@@ -37,7 +37,9 @@ def _parse_command_line(colorize: bool, args=None):
     if colorize:
         formatter_class = add_color_to_formatter_class(formatter_class)
 
-    parser = argparse.ArgumentParser(prog=APP,
+    prog = os.path.basename(sys.argv[0])
+
+    parser = argparse.ArgumentParser(prog=prog,
                                      add_help=False,
                                      description=DESCRIPTION,
                                      epilog=_EPILOG,

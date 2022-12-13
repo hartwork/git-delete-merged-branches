@@ -36,4 +36,4 @@ jobs:
         run: |-
           rm git-{delete-merged-branches,dmb}.1  # to enforce a diff for the generator to remove
           ./sync-manpage-with-help-output.sh
-          git diff --exit-code -- {delete-merged-branches,dmb}.1
+          git diff --exit-code -- git-{delete-merged-branches,dmb}.1

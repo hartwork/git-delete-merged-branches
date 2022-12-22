@@ -1,3 +1,7 @@
+[![Run the test suite](https://github.com/hartwork/git-delete-merged-branches/actions/workflows/run-tests.yml/badge.svg)](https://github.com/hartwork/git-delete-merged-branches/actions/workflows/run-tests.yml)
+[![Packaging status](https://repology.org/badge/tiny-repos/git-delete-merged-branches.svg)](https://repology.org/project/git-delete-merged-branches/versions)
+
+
 # git-delete-merged-branches
 
 A convenient command-line tool helping you keep repositories clean.

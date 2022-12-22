@@ -21,6 +21,10 @@ class PullFailed(GitException):
     pass
 
 
+class MergeBaseFailed(GitException):
+    pass
+
+
 class Git:
     _GIT = 'git'
     _GIT_ENCODING = 'utf-8'
@@ -303,7 +307,14 @@ class Git:
 
     def merge_base(self, target_branch, topic_branch) -> str:
         argv = [self._GIT, 'merge-base', target_branch, topic_branch]
-        output_bytes = self._subprocess_check_output(argv, is_write=False)
+
+        try:
+            output_bytes = self._subprocess_check_output(argv, is_write=False)
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                raise MergeBaseFailed
+            raise
+
         lines = self._output_bytes_to_lines(output_bytes)
         assert len(lines) == 1
         return lines[0]

@@ -8,7 +8,7 @@ from operator import and_
 from subprocess import CalledProcessError
 from typing import List, Optional, Set, Tuple
 
-from ._git import CheckoutFailed, PullFailed
+from ._git import CheckoutFailed, MergeBaseFailed, PullFailed
 from ._metadata import APP
 
 
@@ -205,7 +205,10 @@ class DeleteMergedBranches:
         and then asks ``git cherry`` if that squashed commit has an equivalent
         on the target branch.
         """
-        merge_base_commit_sha1 = self._git.merge_base(target_branch, topic_branch)
+        try:
+            merge_base_commit_sha1 = self._git.merge_base(target_branch, topic_branch)
+        except MergeBaseFailed:
+            return False
         squash_merge_commit_sha1 = self._git.commit_tree(message=f'Squash-merge {topic_branch!r}',
                                                          parent_committish=merge_base_commit_sha1,
                                                          tree=topic_branch + '^{tree}')

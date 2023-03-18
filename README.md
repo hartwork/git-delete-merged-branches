@@ -1,3 +1,4 @@
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 [![Run the test suite](https://github.com/hartwork/git-delete-merged-branches/actions/workflows/run-tests.yml/badge.svg)](https://github.com/hartwork/git-delete-merged-branches/actions/workflows/run-tests.yml)
 [![Packaging status](https://repology.org/badge/tiny-repos/git-delete-merged-branches.svg)](https://repology.org/project/git-delete-merged-branches/versions)
 

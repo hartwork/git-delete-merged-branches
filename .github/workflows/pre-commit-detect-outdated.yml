@@ -18,7 +18,7 @@ jobs:
     name: Detect outdated pre-commit hooks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3.5.2
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v4.5.0

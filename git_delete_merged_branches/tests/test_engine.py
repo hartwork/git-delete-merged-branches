@@ -256,9 +256,9 @@ class DetermineExcludedBranchesTest(TestCase):
                                    confirmation=Mock(),
                                    selector=Mock(),
                                    effort_level=999)
+        git_config_key_format = DeleteMergedBranches._FORMAT_BRANCH_EXCLUDED
         git_config = {
-            DeleteMergedBranches._FORMAT_BRANCH_EXCLUDED.format(name=branch_name):
-            DeleteMergedBranches._CONFIG_VALUE_TRUE
+            git_config_key_format.format(name=branch_name): DeleteMergedBranches._CONFIG_VALUE_TRUE
             for branch_name in excluded_branches_from_config
         }
 

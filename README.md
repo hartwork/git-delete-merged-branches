@@ -24,7 +24,7 @@ If you are using one of the distributions below, you can install
 | [Gentoo Linux](https://packages.gentoo.org/packages/dev-vcs/git-delete-merged-branches) | `emerge -av dev-vcs/git-delete-merged-branches` |
 | [Homebrew](https://formulae.brew.sh/formula/git-delete-merged-branches) | `brew install git-delete-merged-branches` |
 | [MacPorts](https://ports.macports.org/port/py-git-delete-merged-branches/details/) | `port install py-git-delete-merged-branches` |
-| [NixOS](https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/version-management/git-and-tools/git-delete-merged-branches/default.nix) | … |
+| [NixOS](https://search.nixos.org/packages?query=git-delete-merged-branches) | `nix-shell -p git-delete-merged-branches` |
 | [Ubuntu (>=lunar/23.04)](https://packages.ubuntu.com/source/lunar/git-delete-merged-branches) | `apt install git-delete-merged-branches` |
 
 

@@ -26,6 +26,7 @@ If you are using one of the distributions below, you can install
 | [MacPorts](https://ports.macports.org/port/py-git-delete-merged-branches/details/) | `port install py-git-delete-merged-branches` |
 | [NixOS](https://search.nixos.org/packages?query=git-delete-merged-branches) | `nix-shell -p git-delete-merged-branches` |
 | [Ubuntu (>=lunar/23.04)](https://packages.ubuntu.com/source/lunar/git-delete-merged-branches) | `apt install git-delete-merged-branches` |
+| [Void Linux](https://github.com/void-linux/void-packages/tree/master/srcpkgs/git-delete-merged-branches) | `xbps-install -S git-delete-merged-branches` |
 
 
 # Example

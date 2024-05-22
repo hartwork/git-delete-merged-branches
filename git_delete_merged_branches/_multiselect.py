@@ -306,9 +306,7 @@ class _MultiSelectPrompt:
         buffer = Buffer(read_only=True, document=document)
         buffer_control = BufferControl(
             buffer=buffer, input_processors=[_NonItemRenderProcessor(prompt=self, lines=lines)])
-        return Window(buffer_control,
-                      wrap_lines=True,
-                      height=Dimension(min=len(lines), max=len(lines)))
+        return Window(buffer_control, wrap_lines=True, height=Dimension(min=len(lines)))
 
     def _create_layout(self) -> Tuple[Layout, _HeightTrackingScrollablePane]:
         header = self._create_text_display_window_for(self._header_lines)

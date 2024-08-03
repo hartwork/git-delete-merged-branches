@@ -24,5 +24,7 @@ jobs:
       run: |
         set -x
         python3 --version
-        pip3 install -U setuptools  # for Python >=3.12
-        python3 setup.py test
+        pip3 install -U pip setuptools wheel
+        pip3 install ".[tests]"  # for test dependencies
+        pip3 install -U pytest  # for a test runner
+        exec pytest -v -Wdefault -Werror

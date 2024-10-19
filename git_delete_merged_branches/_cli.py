@@ -39,91 +39,114 @@ def _parse_command_line(colorize: bool, args=None):
 
     prog = os.path.basename(sys.argv[0])
 
-    parser = argparse.ArgumentParser(prog=prog,
-                                     add_help=False,
-                                     description=DESCRIPTION,
-                                     epilog=_EPILOG,
-                                     formatter_class=formatter_class)
+    parser = argparse.ArgumentParser(
+        prog=prog,
+        add_help=False,
+        description=DESCRIPTION,
+        epilog=_EPILOG,
+        formatter_class=formatter_class,
+    )
 
-    modes = parser.add_argument_group('modes').add_mutually_exclusive_group()
-    modes.add_argument('--configure',
-                       dest='force_reconfiguration',
-                       action='store_true',
-                       help=f'configure {APP} and exit (without processing any branches)')
-    modes.add_argument('--help', '-h', action='help', help='show this help message and exit')
-    modes.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+    modes = parser.add_argument_group("modes").add_mutually_exclusive_group()
+    modes.add_argument(
+        "--configure",
+        dest="force_reconfiguration",
+        action="store_true",
+        help=f"configure {APP} and exit (without processing any branches)",
+    )
+    modes.add_argument("--help", "-h", action="help", help="show this help message and exit")
+    modes.add_argument("--version", action="version", version="%(prog)s " + VERSION)
 
-    rules = parser.add_argument_group('rules')
-    rules.add_argument('--branch',
-                       '-b',
-                       metavar='BRANCH',
-                       dest='required_target_branches',
-                       default=[],
-                       action='append',
-                       help='require the given branch as a merge target (instead of what is'
-                       ' configured for this repository); can be passed multiple times')
-    rules.add_argument('--effort',
-                       metavar='LEVEL',
-                       dest='effort_level',
-                       type=int,
-                       default=2,
-                       choices=[1, 2, 3],
-                       help=('level of effort to put into finding merged branches'
-                             '; level 1 uses nothing but "git branch --merged"'
-                             ', level 2 adds use of "git cherry"'
-                             ', level 3 adds use of "git cherry" on temporary squashed copies'
-                             ' (default level: %(default)d)'))
+    rules = parser.add_argument_group("rules")
+    rules.add_argument(
+        "--branch",
+        "-b",
+        metavar="BRANCH",
+        dest="required_target_branches",
+        default=[],
+        action="append",
+        help="require the given branch as a merge target (instead of what is"
+        " configured for this repository); can be passed multiple times",
+    )
+    rules.add_argument(
+        "--effort",
+        metavar="LEVEL",
+        dest="effort_level",
+        type=int,
+        default=2,
+        choices=[1, 2, 3],
+        help=(
+            "level of effort to put into finding merged branches"
+            '; level 1 uses nothing but "git branch --merged"'
+            ', level 2 adds use of "git cherry"'
+            ', level 3 adds use of "git cherry" on temporary squashed copies'
+            " (default level: %(default)d)"
+        ),
+    )
 
-    scope = parser.add_argument_group('scope')
-    scope.add_argument('--remote',
-                       '-r',
-                       metavar='REMOTE',
-                       dest='enabled_remotes',
-                       default=[],
-                       action='append',
-                       help=('process the given remote (instead of the remotes that are'
-                             ' configured for this repository); can be passed multiple times'))
-    scope.add_argument('--exclude',
-                       '-x',
-                       metavar='BRANCH',
-                       dest='excluded_branches',
-                       default=[],
-                       action='append',
-                       help=('exclude the given branch from deletion (in addition to'
-                             ' the exclusion list that is configured for this repository)'
-                             '; can be passed multiple times'))
-    scope.add_argument('--include-regex',
-                       metavar='PATTERN',
-                       dest='included_branches_patterns',
-                       default=[],
-                       action='append',
-                       help=('only consider branches for deletion that match the given'
-                             ' regular expression (e.g. "^issue-")'
-                             '; syntax is that of Python module "re"'
-                             '; can be passed multiple times'
-                             ', then acts in logical conjunction ("and")'))
+    scope = parser.add_argument_group("scope")
+    scope.add_argument(
+        "--remote",
+        "-r",
+        metavar="REMOTE",
+        dest="enabled_remotes",
+        default=[],
+        action="append",
+        help=(
+            "process the given remote (instead of the remotes that are"
+            " configured for this repository); can be passed multiple times"
+        ),
+    )
+    scope.add_argument(
+        "--exclude",
+        "-x",
+        metavar="BRANCH",
+        dest="excluded_branches",
+        default=[],
+        action="append",
+        help=(
+            "exclude the given branch from deletion (in addition to"
+            " the exclusion list that is configured for this repository)"
+            "; can be passed multiple times"
+        ),
+    )
+    scope.add_argument(
+        "--include-regex",
+        metavar="PATTERN",
+        dest="included_branches_patterns",
+        default=[],
+        action="append",
+        help=(
+            "only consider branches for deletion that match the given"
+            ' regular expression (e.g. "^issue-")'
+            '; syntax is that of Python module "re"'
+            "; can be passed multiple times"
+            ', then acts in logical conjunction ("and")'
+        ),
+    )
 
-    switches = parser.add_argument_group('flags')
-    switches.add_argument('--debug',
-                          dest='debug',
-                          action='store_true',
-                          help='enable debugging output')
-    switches.add_argument('--dry-run',
-                          '-n',
-                          dest='pretend',
-                          action='store_true',
-                          help='perform a trial run with no changes made')
-    switches.add_argument('--verbose',
-                          '-v',
-                          dest='verbose',
-                          action='store_true',
-                          help='enable verbose output')
-    switches.add_argument('--yes',
-                          '-y',
-                          dest='ask',
-                          default=True,
-                          action='store_false',
-                          help='do not ask for confirmation, assume reply "yes"')
+    switches = parser.add_argument_group("flags")
+    switches.add_argument(
+        "--debug", dest="debug", action="store_true", help="enable debugging output"
+    )
+    switches.add_argument(
+        "--dry-run",
+        "-n",
+        dest="pretend",
+        action="store_true",
+        help="perform a trial run with no changes made",
+    )
+    switches.add_argument(
+        "--verbose", "-v", dest="verbose", action="store_true", help="enable verbose output"
+    )
+    switches.add_argument(
+        "--yes",
+        "-y",
+        dest="ask",
+        default=True,
+        action="store_false",
+        help='do not ask for confirmation, assume reply "yes"',
+    )
 
     return parser.parse_args(args)
 
@@ -140,9 +163,11 @@ def _innermost_main(config, messenger, colorize: bool):
         return
 
     required_target_branches = dmb.determine_required_target_branches(
-        git_config, config.required_target_branches)
-    excluded_branches = dmb.determine_excluded_branches(git_config, config.excluded_branches,
-                                                        config.included_branches_patterns)
+        git_config, config.required_target_branches
+    )
+    excluded_branches = dmb.determine_excluded_branches(
+        git_config, config.excluded_branches, config.included_branches_patterns
+    )
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 
     dmb.refresh_remotes(enabled_remotes)
@@ -152,7 +177,7 @@ def _innermost_main(config, messenger, colorize: bool):
 
 
 def _inner_main():
-    colorize = 'NO_COLOR' not in os.environ
+    colorize = "NO_COLOR" not in os.environ
     if colorize:
         colorama.init()
 

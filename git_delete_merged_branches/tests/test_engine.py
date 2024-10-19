@@ -14,7 +14,6 @@ from .helpers import create_dmb, create_git, run_script
 
 
 class MergeDetectionTest(TestCase):
-
     def test_effort_1_truly_merged(self):
         setup_script = dedent("""
             git init
@@ -43,15 +42,17 @@ class MergeDetectionTest(TestCase):
             run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=1)
-            self.assertEqual(git.find_local_branches(),
-                             ['master', 'merged1', 'merged2', 'not-merged1'])
+            self.assertEqual(
+                git.find_local_branches(), ["master", "merged1", "merged2", "not-merged1"]
+            )
 
             truly_merged, defacto_merged = (
-                dmb._find_branches_merged_to_all_targets_for_single_remote({'master'},
-                                                                           set(),
-                                                                           remote_name=None))
+                dmb._find_branches_merged_to_all_targets_for_single_remote(
+                    {"master"}, set(), remote_name=None
+                )
+            )
 
-            self.assertEqual(truly_merged, {'merged1', 'merged2'})
+            self.assertEqual(truly_merged, {"merged1", "merged2"})
             self.assertEqual(defacto_merged, set())
 
     def test_effort_2_unsquashed_cherries(self):
@@ -104,15 +105,17 @@ class MergeDetectionTest(TestCase):
             dmb = create_dmb(git, effort_level=2)
             self.assertEqual(
                 git.find_local_branches(),
-                ['defacto-merged1', 'defacto-merged2', 'master', 'not-defacto-merged1'])
+                ["defacto-merged1", "defacto-merged2", "master", "not-defacto-merged1"],
+            )
 
             truly_merged, defacto_merged = (
-                dmb._find_branches_merged_to_all_targets_for_single_remote({'master'},
-                                                                           set(),
-                                                                           remote_name=None))
+                dmb._find_branches_merged_to_all_targets_for_single_remote(
+                    {"master"}, set(), remote_name=None
+                )
+            )
 
             self.assertEqual(truly_merged, set())
-            self.assertEqual(defacto_merged, {'defacto-merged1', 'defacto-merged2'})
+            self.assertEqual(defacto_merged, {"defacto-merged1", "defacto-merged2"})
 
     def test_effort_3_squashed_cherries(self):
         setup_script = dedent("""
@@ -152,22 +155,27 @@ class MergeDetectionTest(TestCase):
             run_script(setup_script, cwd=d)
             git = create_git(d)
             dmb = create_dmb(git, effort_level=3)
-            self.assertEqual(git.find_local_branches(), [
-                'defacto-squash-merged1', 'defacto-squash-merged2', 'master',
-                'not-defacto-squash-merged1'
-            ])
+            self.assertEqual(
+                git.find_local_branches(),
+                [
+                    "defacto-squash-merged1",
+                    "defacto-squash-merged2",
+                    "master",
+                    "not-defacto-squash-merged1",
+                ],
+            )
 
             truly_merged, defacto_merged = (
-                dmb._find_branches_merged_to_all_targets_for_single_remote({'master'},
-                                                                           set(),
-                                                                           remote_name=None))
+                dmb._find_branches_merged_to_all_targets_for_single_remote(
+                    {"master"}, set(), remote_name=None
+                )
+            )
 
             self.assertEqual(truly_merged, set())
-            self.assertEqual(defacto_merged, {'defacto-squash-merged1', 'defacto-squash-merged2'})
+            self.assertEqual(defacto_merged, {"defacto-squash-merged1", "defacto-squash-merged2"})
 
 
 class RefreshTargetBranchesTest(TestCase):
-
     def test_refresh_gets_branches_back_in_sync(self):
         setup_script = dedent("""
             mkdir upstream
@@ -202,67 +210,108 @@ class RefreshTargetBranchesTest(TestCase):
         with TemporaryDirectory() as d:
             run_script(setup_script, cwd=d)
 
-            downstream_git = create_git(os.path.join(d, 'downstream'))
+            downstream_git = create_git(os.path.join(d, "downstream"))
             downstream_dmb = create_dmb(downstream_git, effort_level=3)
-            self.assertEqual(downstream_git.find_current_branch(), 'topic1')
-            self.assertEqual(downstream_git.find_local_branches(),
-                             ['checkout-trouble', 'master', 'pull-trouble', 'pull-works', 'topic1'])
-            downstream_dmb.refresh_remotes(['upstream'])
-            self.assertEqual(len(downstream_git.cherry('pull-works', 'upstream/pull-works')), 1)
+            self.assertEqual(downstream_git.find_current_branch(), "topic1")
+            self.assertEqual(
+                downstream_git.find_local_branches(),
+                ["checkout-trouble", "master", "pull-trouble", "pull-works", "topic1"],
+            )
+            downstream_dmb.refresh_remotes(["upstream"])
+            self.assertEqual(len(downstream_git.cherry("pull-works", "upstream/pull-works")), 1)
 
             downstream_dmb.refresh_target_branches(
-                ['checkout-trouble', 'pull-trouble', 'pull-works'])
+                ["checkout-trouble", "pull-trouble", "pull-works"]
+            )
 
-            self.assertEqual(len(downstream_git.cherry('pull-works', 'upstream/pull-works')), 0)
-            self.assertEqual(downstream_git.find_current_branch(), 'topic1')
+            self.assertEqual(len(downstream_git.cherry("pull-works", "upstream/pull-works")), 0)
+            self.assertEqual(downstream_git.find_current_branch(), "topic1")
 
 
 class GitConfigKeysContainDotsTest(TestCase):
-
-    @parameterized.expand([
-        (DeleteMergedBranches.find_required_branches, 'branch.release-1.0.x.dmb-required',
-         'release-1.0.x'),
-        (DeleteMergedBranches.find_excluded_branches, 'branch.release-1.0.x.dmb-excluded',
-         'release-1.0.x'),
-        (DeleteMergedBranches.find_enabled_remotes, 'remote.linux-6.x.dmb-enabled', 'linux-6.x'),
-    ])
-    def test_supports_branch_names_containing_dots(self, extractor_function, git_config_dict_key,
-                                                   expected_value):
-        assert '.' in expected_value
+    @parameterized.expand(
+        [
+            (
+                DeleteMergedBranches.find_required_branches,
+                "branch.release-1.0.x.dmb-required",
+                "release-1.0.x",
+            ),
+            (
+                DeleteMergedBranches.find_excluded_branches,
+                "branch.release-1.0.x.dmb-excluded",
+                "release-1.0.x",
+            ),
+            (
+                DeleteMergedBranches.find_enabled_remotes,
+                "remote.linux-6.x.dmb-enabled",
+                "linux-6.x",
+            ),
+        ]
+    )
+    def test_supports_branch_names_containing_dots(
+        self, extractor_function, git_config_dict_key, expected_value
+    ):
+        assert "." in expected_value
         git_config_dict = {
-            git_config_dict_key: 'true',
+            git_config_dict_key: "true",
         }
         self.assertEqual(extractor_function(git_config_dict), [expected_value])
 
 
 class DetermineExcludedBranchesTest(TestCase):
-
-    @parameterized.expand([
-        ('git config exclude', ['b1', 'b2', 'b3'], ['b1', 'b3'], [], [], {'b1', 'b3'}),
-        ('--exclude', ['b1', 'b2', 'b3'], [], ['b1', 'b3'], [], {'b1', 'b3'}),
-        ('--exclude + config exclude', ['b1', 'b2', 'b3'], ['b1'], ['b3'], [], {'b1', 'b3'}),
-        ('--include-regex match full', ['b1', 'b2', 'b3'], [], [], ['^..$', '^b2$'], {'b1', 'b3'}),
-        ('--include-regex match partial', ['b1', 'b2', 'b3'], [], [], [r'\d', 'b'], set()),
-        ('--include-regex mismatch', ['b1', 'b2', 'b3'], [], [], ['^b1$',
-                                                                  '^b2$'], {'b1', 'b2', 'b3'}),
-        ('--include-regex + --exclude + config exclude', ['b1', 'b2', 'b3'], ['b1'], ['b3'],
-         [r'^b\d$'], {'b1', 'b3'}),
-    ])
-    def test(self, _label, existing_branches, excluded_branches_from_config,
-             excluded_branches_extra, included_branches_patterns, expected_exclusion_set):
+    @parameterized.expand(
+        [
+            ("git config exclude", ["b1", "b2", "b3"], ["b1", "b3"], [], [], {"b1", "b3"}),
+            ("--exclude", ["b1", "b2", "b3"], [], ["b1", "b3"], [], {"b1", "b3"}),
+            ("--exclude + config exclude", ["b1", "b2", "b3"], ["b1"], ["b3"], [], {"b1", "b3"}),
+            (
+                "--include-regex match full",
+                ["b1", "b2", "b3"],
+                [],
+                [],
+                ["^..$", "^b2$"],
+                {"b1", "b3"},
+            ),
+            ("--include-regex match partial", ["b1", "b2", "b3"], [], [], [r"\d", "b"], set()),
+            (
+                "--include-regex mismatch",
+                ["b1", "b2", "b3"],
+                [],
+                [],
+                ["^b1$", "^b2$"],
+                {"b1", "b2", "b3"},
+            ),
+            (
+                "--include-regex + --exclude + config exclude",
+                ["b1", "b2", "b3"],
+                ["b1"],
+                ["b3"],
+                [r"^b\d$"],
+                {"b1", "b3"},
+            ),
+        ]
+    )
+    def test(
+        self,
+        _label,
+        existing_branches,
+        excluded_branches_from_config,
+        excluded_branches_extra,
+        included_branches_patterns,
+        expected_exclusion_set,
+    ):
         git_mock = Mock(find_all_branch_names=Mock(return_value=existing_branches))
-        dmb = DeleteMergedBranches(git=git_mock,
-                                   messenger=Mock(),
-                                   confirmation=Mock(),
-                                   selector=Mock(),
-                                   effort_level=999)
+        dmb = DeleteMergedBranches(
+            git=git_mock, messenger=Mock(), confirmation=Mock(), selector=Mock(), effort_level=999
+        )
         git_config_key_format = DeleteMergedBranches._FORMAT_BRANCH_EXCLUDED
         git_config = {
             git_config_key_format.format(name=branch_name): DeleteMergedBranches._CONFIG_VALUE_TRUE
             for branch_name in excluded_branches_from_config
         }
 
-        actual_exclusion_set = dmb.determine_excluded_branches(git_config, excluded_branches_extra,
-                                                               included_branches_patterns)
+        actual_exclusion_set = dmb.determine_excluded_branches(
+            git_config, excluded_branches_extra, included_branches_patterns
+        )
 
         self.assertEqual(actual_exclusion_set, expected_exclusion_set)

@@ -3,7 +3,7 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, Optional
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
@@ -67,7 +67,7 @@ class _NonItemRenderProcessor(Processor):
     A Prompt Toolkit input processor for Buffer that formats lines for display to the user.
     """
 
-    def __init__(self, prompt: '_MultiSelectPrompt', lines: List):
+    def __init__(self, prompt: '_MultiSelectPrompt', lines: list):
         self._prompt = prompt
         self._lines = lines
 
@@ -186,7 +186,7 @@ class _MultiSelectPrompt:
         self._item_selection_pane: Optional[_HeightTrackingScrollablePane] = None
         self._buffer: Optional[Buffer] = None
         self._document: Optional[Document] = None
-        self._accepted_selection: List[Any] = None
+        self._accepted_selection: list[Any] = None
 
     def _move_cursor_one_page_vertically(self, upwards: bool):
         render_cursor_line = (self._item_selection_pane.content.render_info.cursor_position.y
@@ -301,14 +301,14 @@ class _MultiSelectPrompt:
 
         return key_bindings
 
-    def _create_text_display_window_for(self, lines: List[_LineBase]) -> Window:
+    def _create_text_display_window_for(self, lines: list[_LineBase]) -> Window:
         document = Document(text='\n'.join(line.text for line in lines))
         buffer = Buffer(read_only=True, document=document)
         buffer_control = BufferControl(
             buffer=buffer, input_processors=[_NonItemRenderProcessor(prompt=self, lines=lines)])
         return Window(buffer_control, wrap_lines=True, height=Dimension(min=len(lines)))
 
-    def _create_layout(self) -> Tuple[Layout, _HeightTrackingScrollablePane]:
+    def _create_layout(self) -> tuple[Layout, _HeightTrackingScrollablePane]:
         header = self._create_text_display_window_for(self._header_lines)
         footer = self._create_text_display_window_for(self._footer_lines)
 
@@ -338,7 +338,7 @@ class _MultiSelectPrompt:
     def _collect_selected_values(self):
         return [item.value for item in self.item_lines if item.selected]
 
-    def get_selected_values(self) -> List[Any]:
+    def get_selected_values(self) -> list[Any]:
         self._document = Document(text='\n'.join(line.text for line in self.item_lines))
         self._buffer = _LineJumpingBuffer(read_only=True, document=self._document)
         layout, self._item_selection_pane = self._create_layout()
@@ -350,8 +350,8 @@ class _MultiSelectPrompt:
         return self._accepted_selection
 
 
-def multiselect(messenger: Messenger, options: List[str], initial_selection: List[int], title: str,
-                help: str, min_selection_count: int, colorize: bool) -> List[str]:
+def multiselect(messenger: Messenger, options: list[str], initial_selection: list[int], title: str,
+                help: str, min_selection_count: int, colorize: bool) -> list[str]:
     assert len(options) >= min_selection_count
 
     menu = _MultiSelectPrompt(

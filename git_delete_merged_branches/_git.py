@@ -4,7 +4,7 @@
 import os
 import subprocess
 from collections import OrderedDict
-from typing import List, Optional, Set
+from typing import Optional
 
 from ._metadata import APP
 
@@ -71,7 +71,7 @@ class Git:
                                      env=env)
 
     @classmethod
-    def _output_bytes_to_lines(cls, output_bytes) -> List[str]:
+    def _output_bytes_to_lines(cls, output_bytes) -> list[str]:
         text = output_bytes.decode(cls._GIT_ENCODING).rstrip()
         if not text:  # protect against this: ''.split('\n') -> ['']
             return []
@@ -103,7 +103,7 @@ class Git:
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         return self._output_bytes_to_lines(output_bytes)
 
-    def _find_branches(self, extra_argv=None, strip_left: int = 2) -> List[str]:
+    def _find_branches(self, extra_argv=None, strip_left: int = 2) -> list[str]:
         # strip_left==1 strips leading "refs/"
         # strip_left==2 strips leading "refs/heads/" and "refs/remotes/"
         argv = [
@@ -119,13 +119,13 @@ class Git:
             line for line in lines if not line.endswith('/HEAD') and 'HEAD detached at' not in line
         ]
 
-    def find_local_branches(self) -> List[str]:
+    def find_local_branches(self) -> list[str]:
         return self._find_branches()
 
-    def find_all_branch_refs(self) -> List[str]:
+    def find_all_branch_refs(self) -> list[str]:
         return self._find_branches(['--all'])
 
-    def find_all_branch_names(self) -> Set[str]:
+    def find_all_branch_names(self) -> set[str]:
         branch_names = set()
         for line in self._find_branches(['--all'], strip_left=1):
             heads_or_remotes, *remainder = line.split('/')
@@ -138,7 +138,7 @@ class Git:
             branch_names.add(branch_name)
         return branch_names
 
-    def find_remote_branches_at(self, remote_name) -> List[str]:
+    def find_remote_branches_at(self, remote_name) -> list[str]:
         assert remote_name
         extra_argv = ['--remote', '--list', f'{remote_name}/*']
         return self._find_branches(extra_argv)
@@ -157,7 +157,7 @@ class Git:
             return None  # detached head
         return reference[len(expected_prefix):]
 
-    def find_working_tree_branches(self) -> List[Optional[str]]:
+    def find_working_tree_branches(self) -> list[Optional[str]]:
         argv = [self._GIT, 'worktree', 'list', '--porcelain']  # requires Git >=2.7.0
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         lines = self._output_bytes_to_lines(output_bytes)
@@ -165,7 +165,7 @@ class Git:
         detached_line_prefix = 'detached'
         branch_line_prefix = 'branch '
         branch_prefix = 'refs/heads/'
-        branch_names: List[Optional[str]] = []
+        branch_names: list[Optional[str]] = []
 
         for line in lines:
             if line.startswith(detached_line_prefix):
@@ -262,7 +262,7 @@ class Git:
                 raise PullFailed
             raise
 
-    def _has_changes(self, extra_argv: Optional[List[str]] = None) -> bool:
+    def _has_changes(self, extra_argv: Optional[list[str]] = None) -> bool:
         argv = [self._GIT, 'diff', '--exit-code', '--quiet']
         if extra_argv:
             argv += extra_argv
@@ -283,7 +283,7 @@ class Git:
             return True
         return self.has_staged_changes()
 
-    def cherry(self, target_branch, topic_branch) -> List[str]:
+    def cherry(self, target_branch, topic_branch) -> list[str]:
         argv = [self._GIT, 'cherry', target_branch, topic_branch]
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         return self._output_bytes_to_lines(output_bytes)

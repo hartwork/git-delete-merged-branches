@@ -6,7 +6,7 @@ import re
 from functools import partial, reduce
 from operator import and_
 from subprocess import CalledProcessError
-from typing import List, Optional, Set, Tuple
+from typing import Optional
 
 from ._git import CheckoutFailed, MergeBaseFailed, PullFailed
 from ._metadata import APP
@@ -75,7 +75,7 @@ class DeleteMergedBranches:
         self._effort_using_squashed_copies = effort_level >= 3
 
     def _interactively_edit_list(self, description, valid_names, old_names, format,
-                                 min_selection_count) -> Set[str]:
+                                 min_selection_count) -> set[str]:
         if len(valid_names) < min_selection_count:
             raise _TooFewOptionsAvailable
 
@@ -101,7 +101,7 @@ class DeleteMergedBranches:
 
         return new_names
 
-    def _configure_required_branches(self, git_config) -> Set[str]:
+    def _configure_required_branches(self, git_config) -> set[str]:
         try:
             return self._interactively_edit_list(
                 '[1/3] For a branch to be considered'
@@ -114,7 +114,7 @@ class DeleteMergedBranches:
         except _TooFewOptionsAvailable:
             raise _GitRepositoryWithoutBranches
 
-    def _configure_excluded_branches(self, git_config, new_required_branches: Set[str]):
+    def _configure_excluded_branches(self, git_config, new_required_branches: set[str]):
         valid_names = sorted(set(self._git.find_all_branch_names()) - new_required_branches)
         self._interactively_edit_list(
             '[2/3] Which of these branches (if any)'
@@ -177,7 +177,7 @@ class DeleteMergedBranches:
         return cls._filter_git_config(git_config, cls._PATTERN_REMOTE_ENABLED)
 
     def _find_branches_merged_using_git_branch_merged(self, required_target_branches,
-                                                      remote_name: Optional[str]) -> Set[str]:
+                                                      remote_name: Optional[str]) -> set[str]:
         if remote_name is None:
             find_branches_that_were_merged_into = self._git.find_merged_local_branches_for
         else:
@@ -218,7 +218,7 @@ class DeleteMergedBranches:
         return defacto_merged_into_target
 
     def _find_branches_merged_using_git_cherry(self, required_target_branches,
-                                               candidate_branches) -> Set[str]:
+                                               candidate_branches) -> set[str]:
         assert required_target_branches
 
         if not candidate_branches:
@@ -268,8 +268,8 @@ class DeleteMergedBranches:
         return branches_merged_to_all_required_targets
 
     def _find_branches_merged_to_all_targets_for_single_remote(
-            self, required_target_branches, excluded_branches: Set[str],
-            remote_name: Optional[str]) -> Tuple[Set[str], Set[str]]:
+            self, required_target_branches, excluded_branches: set[str],
+            remote_name: Optional[str]) -> tuple[set[str], set[str]]:
         if remote_name is not None:
             excluded_branches = {
                 f'{remote_name}/{branch_name}'
@@ -299,7 +299,7 @@ class DeleteMergedBranches:
 
         return (truly_merged_branches, defacto_merged_branches)
 
-    def _report_branches_as_deleted(self, branch_names: Set[str], remote_name: str = None):
+    def _report_branches_as_deleted(self, branch_names: set[str], remote_name: str = None):
         branch_type = 'local' if (remote_name is None) else 'remote'
         info_text = f'{len(branch_names)} {branch_type} branch(es) deleted.'
         self._messenger.tell_info(info_text)
@@ -344,7 +344,7 @@ class DeleteMergedBranches:
             self._report_branches_as_deleted(truly_merged | defacto_merged)
 
     def _delete_remote_merged_branches_for(self, required_target_branches, excluded_branches,
-                                           remote_name, all_branch_refs: Set[str]):
+                                           remote_name, all_branch_refs: set[str]):
         if not all((f'{remote_name}/{branch_name}' in all_branch_refs)
                    for branch_name in required_target_branches):
             self._messenger.tell_info(f'Skipped remote {remote_name!r} '
@@ -465,8 +465,8 @@ class DeleteMergedBranches:
             self._delete_remote_merged_branches_for(required_target_branches, excluded_branches,
                                                     remote_name, all_branch_refs)
 
-    def determine_excluded_branches(self, git_config: dict, excluded_branches: List[str],
-                                    included_branches_patterns: List[str]) -> Set[str]:
+    def determine_excluded_branches(self, git_config: dict, excluded_branches: list[str],
+                                    included_branches_patterns: list[str]) -> set[str]:
         existing_branches = set(self._git.find_all_branch_names())
         if excluded_branches:
             excluded_branches_set = set(excluded_branches)
@@ -495,7 +495,7 @@ class DeleteMergedBranches:
         return excluded_branches_set
 
     def determine_required_target_branches(self, git_config: dict,
-                                           required_target_branches: List[str]):
+                                           required_target_branches: list[str]):
         existing_branches = set(self._git.find_local_branches())
         if required_target_branches:
             required_target_branches_set = set(required_target_branches)
@@ -511,7 +511,7 @@ class DeleteMergedBranches:
 
         return required_target_branches_set
 
-    def determine_enabled_remotes(self, git_config: dict, enabled_remotes: List[str]):
+    def determine_enabled_remotes(self, git_config: dict, enabled_remotes: list[str]):
         existing_remotes = set(self._git.find_remotes())
         if enabled_remotes:
             enabled_remotes_set = set(enabled_remotes)

@@ -2,12 +2,12 @@
 # Licensed under GPL v3 or later
 
 _NEED_ESCAPING_INSIDE_DOUBLE_QUOTES = set('!`"$\\')
-_NEED_ESCAPING_WITHOUT_QUOTES = _NEED_ESCAPING_INSIDE_DOUBLE_QUOTES | set('\' {}()?*&<>;#')
+_NEED_ESCAPING_WITHOUT_QUOTES = _NEED_ESCAPING_INSIDE_DOUBLE_QUOTES | set("' {}()?*&<>;#")
 
 
 def _escape_for_double_quotes(text: str) -> str:
-    escape = {c: f'\\{c}' for c in _NEED_ESCAPING_INSIDE_DOUBLE_QUOTES}
-    escaped = ''.join(escape.get(c, c) for c in text)
+    escape = {c: f"\\{c}" for c in _NEED_ESCAPING_INSIDE_DOUBLE_QUOTES}
+    escaped = "".join(escape.get(c, c) for c in text)
     return escaped
 
 
@@ -27,7 +27,7 @@ def escape_for_shell_display(text: str) -> str:
     if not text:
         return "''"
 
-    if ' ' in text:
+    if " " in text:
         # Is surrounding by single quotes an option?
         if "'" in text:
             # Surrounding by single quotes is not an option;

@@ -26,9 +26,9 @@ def run_script(content, cwd):
 
     with NamedTemporaryFile() as f:
         for text in (header, content):
-            f.write(text.encode('utf-8'))
+            f.write(text.encode("utf-8"))
         f.flush()
-        subprocess.check_call(['bash', f.name], cwd=cwd)
+        subprocess.check_call(["bash", f.name], cwd=cwd)
 
 
 def create_git(work_dir: str) -> Git:
@@ -39,8 +39,10 @@ def create_git(work_dir: str) -> Git:
 def create_dmb(git: Git, effort_level: int) -> DeleteMergedBranches:
     messenger = Messenger(colorize=False)
     confirmation = Confirmation(messenger=messenger, ask=False)
-    return DeleteMergedBranches(git,
-                                messenger=messenger,
-                                confirmation=confirmation,
-                                selector=Mock(),
-                                effort_level=effort_level)
+    return DeleteMergedBranches(
+        git,
+        messenger=messenger,
+        confirmation=confirmation,
+        selector=Mock(),
+        effort_level=effort_level,
+    )

@@ -2,12 +2,6 @@
 # Licensed under GPL v3 or later
 
 repos:
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.18.0
-    hooks:
-      - id: pyupgrade
-        args: ['--py39-plus']
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -16,17 +10,10 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
 
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.0
     hooks:
-      - id: flake8
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-
-  - repo: https://github.com/google/yapf
-    rev: v0.40.2
-    hooks:
-      - id: yapf
+      - id: ruff
+        args:
+          - --fix
+      - id: ruff-format

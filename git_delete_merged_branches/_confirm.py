@@ -3,8 +3,8 @@
 
 
 class Confirmation:
-    _CONFIRM_GOOD = ('y', 'Y')
-    _CONFIRM_BAD = ('', 'n', 'N')
+    _CONFIRM_GOOD = ("y", "Y")
+    _CONFIRM_BAD = ("", "n", "N")
     _CONFIRM_KNOWN = _CONFIRM_GOOD + _CONFIRM_BAD
 
     def __init__(self, messenger, ask):
@@ -20,7 +20,7 @@ class Confirmation:
         self._messenger.produce_air()
 
         while True:
-            reply = input(f'{question} [y/N] ')
+            reply = input(f"{question} [y/N] ")
             if reply in self._CONFIRM_KNOWN:
                 break
 

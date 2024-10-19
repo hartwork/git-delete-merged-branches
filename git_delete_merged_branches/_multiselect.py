@@ -30,7 +30,7 @@ class _ItemRenderProcessor(Processor):
     A Prompt Toolkit input processor for Buffer that formats lines for display to the user.
     """
 
-    def __init__(self, prompt: '_MultiSelectPrompt'):
+    def __init__(self, prompt: "_MultiSelectPrompt"):
         self._prompt = prompt
 
     def apply_transformation(self, transformation_input: TransformationInput) -> Transformation:
@@ -39,11 +39,12 @@ class _ItemRenderProcessor(Processor):
         new_fragments: StyleAndTextTuples = []
 
         highlighted = transformation_input.lineno == self._prompt.get_cursor_line()
-        cursor = '▶' if highlighted else ' '
-        checkmark = 'x' if line_info.selected else ' '
-        fallback_style = (self._prompt.highlighted_style
-                          if highlighted else self._prompt.neutral_style)
-        new_fragments.append((fallback_style, f'{cursor} [{checkmark}] '))
+        cursor = "▶" if highlighted else " "
+        checkmark = "x" if line_info.selected else " "
+        fallback_style = (
+            self._prompt.highlighted_style if highlighted else self._prompt.neutral_style
+        )
+        new_fragments.append((fallback_style, f"{cursor} [{checkmark}] "))
 
         # Apply new style where adequate
         for fragment in transformation_input.fragments:
@@ -57,7 +58,7 @@ class _ItemRenderProcessor(Processor):
 
         # Add right padding
         padding_width = 2 + (self._prompt.peak_item_label_length - len(line_info.text))
-        new_fragments.append((fallback_style, ' ' * padding_width))
+        new_fragments.append((fallback_style, " " * padding_width))
 
         return Transformation(fragments=new_fragments)
 
@@ -67,7 +68,7 @@ class _NonItemRenderProcessor(Processor):
     A Prompt Toolkit input processor for Buffer that formats lines for display to the user.
     """
 
-    def __init__(self, prompt: '_MultiSelectPrompt', lines: list):
+    def __init__(self, prompt: "_MultiSelectPrompt", lines: list):
         self._prompt = prompt
         self._lines = lines
 
@@ -79,8 +80,9 @@ class _NonItemRenderProcessor(Processor):
         else:
             new_style = self._prompt.neutral_style
 
-        new_fragments: StyleAndTextTuples = [(new_style, text)
-                                             for _old_style, text in transformation_input.fragments]
+        new_fragments: StyleAndTextTuples = [
+            (new_style, text) for _old_style, text in transformation_input.fragments
+        ]
 
         return Transformation(fragments=new_fragments)
 
@@ -101,9 +103,11 @@ class _LineJumpingBuffer(Buffer):
         previous_line_index, _ = self.document.translate_index_to_position(self.cursor_position)
 
         while True:
-            super().apply_search(search_state=search_state,
-                                 include_current_position=include_current_position,
-                                 count=count)
+            super().apply_search(
+                search_state=search_state,
+                include_current_position=include_current_position,
+                count=count,
+            )
             if self.cursor_position == previous_cursor_position:
                 # The call to search has not moved the cursor, search has ended
                 return
@@ -136,12 +140,14 @@ class _HeightTrackingScrollablePane(ScrollablePane):
         z_index: Optional[int],
     ) -> None:
         self.current_height = write_position.height
-        super().write_to_screen(screen=screen,
-                                mouse_handlers=mouse_handlers,
-                                write_position=write_position,
-                                parent_style=parent_style,
-                                erase_bg=erase_bg,
-                                z_index=z_index)
+        super().write_to_screen(
+            screen=screen,
+            mouse_handlers=mouse_handlers,
+            write_position=write_position,
+            parent_style=parent_style,
+            erase_bg=erase_bg,
+            z_index=z_index,
+        )
 
 
 class _MultiSelectPrompt:
@@ -166,12 +172,14 @@ class _MultiSelectPrompt:
         value: Any
         selected: bool
 
-    def __init__(self,
-                 highlighted_style: str = '',
-                 header_style: str = '',
-                 initial_cursor_index=0,
-                 min_selection_count=0):
-        self.neutral_style: str = ''
+    def __init__(
+        self,
+        highlighted_style: str = "",
+        header_style: str = "",
+        initial_cursor_index=0,
+        min_selection_count=0,
+    ):
+        self.neutral_style: str = ""
         self.highlighted_style: str = highlighted_style
         self.header_style: str = header_style
 
@@ -189,28 +197,33 @@ class _MultiSelectPrompt:
         self._accepted_selection: list[Any] = None
 
     def _move_cursor_one_page_vertically(self, upwards: bool):
-        render_cursor_line = (self._item_selection_pane.content.render_info.cursor_position.y
-                              - self._item_selection_pane.vertical_scroll)
+        render_cursor_line = (
+            self._item_selection_pane.content.render_info.cursor_position.y
+            - self._item_selection_pane.vertical_scroll
+        )
         page_height_in_lines = self._item_selection_pane.current_height
 
         if upwards and render_cursor_line > 0:
             new_line_index = self.get_cursor_line() - render_cursor_line
         elif not upwards and render_cursor_line < page_height_in_lines - 1:
-            new_line_index = self.get_cursor_line() + (page_height_in_lines - render_cursor_line
-                                                       - 1)
+            new_line_index = self.get_cursor_line() + (
+                page_height_in_lines - render_cursor_line - 1
+            )
         else:
             current_line_index = self.get_cursor_line()
             if upwards:
                 new_line_index = max(0, current_line_index - page_height_in_lines)
             else:
                 new_line_index = min(
-                    len(self.item_lines) - 1, current_line_index + page_height_in_lines)
+                    len(self.item_lines) - 1, current_line_index + page_height_in_lines
+                )
 
         self._move_cursor_to_line(new_line_index)
 
     def _move_cursor_to_line(self, line_index: int):
-        self._buffer.cursor_position = \
-            self._document.translate_row_col_to_index(row=line_index, col=0)
+        self._buffer.cursor_position = self._document.translate_row_col_to_index(
+            row=line_index, col=0
+        )
 
     def get_cursor_line(self):
         row, col = self._document.translate_index_to_position(self._buffer.cursor_position)
@@ -223,8 +236,9 @@ class _MultiSelectPrompt:
         current_line_index = self.get_cursor_line()
 
         # Can we even move any further in that direction?
-        if ((upwards and current_line_index == 0)
-                or (not upwards and current_line_index == len(self.item_lines) - 1)):
+        if (upwards and current_line_index == 0) or (
+            not upwards and current_line_index == len(self.item_lines) - 1
+        ):
             return
 
         self._move_cursor_to_line(current_line_index + (-1 if upwards else 1))
@@ -281,31 +295,32 @@ class _MultiSelectPrompt:
     def _create_key_bindings(self):
         key_bindings = KeyBindings()
 
-        key_bindings.add('c-c')(self._on_abort)
-        key_bindings.add('q', filter=~is_searching)(self._on_abort)
+        key_bindings.add("c-c")(self._on_abort)
+        key_bindings.add("q", filter=~is_searching)(self._on_abort)
 
-        key_bindings.add('space', filter=~is_searching)(self._on_toggle)
+        key_bindings.add("space", filter=~is_searching)(self._on_toggle)
 
-        for key in ('enter', 'right'):
+        for key in ("enter", "right"):
             key_bindings.add(key, filter=~is_searching)(self._on_accept)
 
-        for key in ('up', 'k'):
+        for key in ("up", "k"):
             key_bindings.add(key, filter=~is_searching)(self._on_move_line_up)
-        for key in ('down', 'j'):
+        for key in ("down", "j"):
             key_bindings.add(key, filter=~is_searching)(self._on_move_line_down)
 
-        key_bindings.add('pageup', filter=~is_searching)(self._on_move_page_up)
-        key_bindings.add('pagedown', filter=~is_searching)(self._on_move_page_down)
-        key_bindings.add('home', filter=~is_searching)(self._on_move_to_first)
-        key_bindings.add('end', filter=~is_searching)(self._on_move_to_last)
+        key_bindings.add("pageup", filter=~is_searching)(self._on_move_page_up)
+        key_bindings.add("pagedown", filter=~is_searching)(self._on_move_page_down)
+        key_bindings.add("home", filter=~is_searching)(self._on_move_to_first)
+        key_bindings.add("end", filter=~is_searching)(self._on_move_to_last)
 
         return key_bindings
 
     def _create_text_display_window_for(self, lines: list[_LineBase]) -> Window:
-        document = Document(text='\n'.join(line.text for line in lines))
+        document = Document(text="\n".join(line.text for line in lines))
         buffer = Buffer(read_only=True, document=document)
         buffer_control = BufferControl(
-            buffer=buffer, input_processors=[_NonItemRenderProcessor(prompt=self, lines=lines)])
+            buffer=buffer, input_processors=[_NonItemRenderProcessor(prompt=self, lines=lines)]
+        )
         return Window(buffer_control, wrap_lines=True, height=Dimension(min=len(lines)))
 
     def _create_layout(self) -> tuple[Layout, _HeightTrackingScrollablePane]:
@@ -313,33 +328,36 @@ class _MultiSelectPrompt:
         footer = self._create_text_display_window_for(self._footer_lines)
 
         search = SearchToolbar(ignore_case=True)
-        buffer_control = BufferControl(buffer=self._buffer,
-                                       input_processors=[_ItemRenderProcessor(prompt=self)],
-                                       preview_search=True,
-                                       search_buffer_control=search.control)
+        buffer_control = BufferControl(
+            buffer=self._buffer,
+            input_processors=[_ItemRenderProcessor(prompt=self)],
+            preview_search=True,
+            search_buffer_control=search.control,
+        )
         item_selection_window = Window(buffer_control, always_hide_cursor=True, wrap_lines=True)
 
         pane_scroll_offsets = ScrollOffsets(top=0, bottom=0)
-        pane_height = Dimension(min=1,
-                                max=self._document.line_count,
-                                preferred=self._document.line_count)
-        item_selection_pane = _HeightTrackingScrollablePane(item_selection_window,
-                                                            height=pane_height,
-                                                            scroll_offsets=pane_scroll_offsets)
-        item_selection_pane.show_scrollbar = lambda: (item_selection_pane.current_height or 0
-                                                      ) < self._document.line_count
+        pane_height = Dimension(
+            min=1, max=self._document.line_count, preferred=self._document.line_count
+        )
+        item_selection_pane = _HeightTrackingScrollablePane(
+            item_selection_window, height=pane_height, scroll_offsets=pane_scroll_offsets
+        )
+        item_selection_pane.show_scrollbar = (
+            lambda: (item_selection_pane.current_height or 0) < self._document.line_count
+        )
 
         item_selection_pane_plus_search = HSplit([item_selection_pane, search])
-        hsplit = HSplit([header, item_selection_pane_plus_search, footer],
-                        padding=1,
-                        align=VerticalAlign.TOP)
+        hsplit = HSplit(
+            [header, item_selection_pane_plus_search, footer], padding=1, align=VerticalAlign.TOP
+        )
         return Layout(hsplit, focused_element=item_selection_pane), item_selection_pane
 
     def _collect_selected_values(self):
         return [item.value for item in self.item_lines if item.selected]
 
     def get_selected_values(self) -> list[Any]:
-        self._document = Document(text='\n'.join(line.text for line in self.item_lines))
+        self._document = Document(text="\n".join(line.text for line in self.item_lines))
         self._buffer = _LineJumpingBuffer(read_only=True, document=self._document)
         layout, self._item_selection_pane = self._create_layout()
         app = Application(key_bindings=self._create_key_bindings(), layout=layout)
@@ -350,13 +368,20 @@ class _MultiSelectPrompt:
         return self._accepted_selection
 
 
-def multiselect(messenger: Messenger, options: list[str], initial_selection: list[int], title: str,
-                help: str, min_selection_count: int, colorize: bool) -> list[str]:
+def multiselect(
+    messenger: Messenger,
+    options: list[str],
+    initial_selection: list[int],
+    title: str,
+    help: str,
+    min_selection_count: int,
+    colorize: bool,
+) -> list[str]:
     assert len(options) >= min_selection_count
 
     menu = _MultiSelectPrompt(
-        highlighted_style='bold fg:black bg:white' if colorize else '',
-        header_style='bold fg:ansibrightgreen' if colorize else '',
+        highlighted_style="bold fg:black bg:white" if colorize else "",
+        header_style="bold fg:ansibrightgreen" if colorize else "",
         initial_cursor_index=initial_selection[0] if initial_selection else 0,
         min_selection_count=min_selection_count,
     )
@@ -374,6 +399,6 @@ def multiselect(messenger: Messenger, options: list[str], initial_selection: lis
     if selected_options is None:
         raise KeyboardInterrupt
 
-    messenger.request_air('\n')
+    messenger.request_air("\n")
 
     return selected_options

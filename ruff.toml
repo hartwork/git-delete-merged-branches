@@ -1,0 +1,12 @@
+indent-width = 4
+line-length = 100
+target-version = "py39"
+
+[lint]
+select = [
+    "E",  # pycodestyle
+    "F",  # Pyflakes + flake8
+    "I",  # isort
+    "UP", # pyupgrade
+    "W",  # pycodestyle
+]

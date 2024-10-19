@@ -1,6 +1,0 @@
-[style]
-allow_split_before_default_or_named_assigns = False
-allow_split_before_dict_value = False
-based_on_style = pep8
-column_limit = 100
-split_before_arithmetic_operator = True

@@ -53,6 +53,16 @@ class _InvalidRegexPattern(_DmbException):
         )
 
 
+class _CannotDryRunConfigurationError(_DmbException):
+    def __init__(self, force_reconfiguration):
+        message = (
+            "Arguments --configure and --dry-run are not compatible."
+            if force_reconfiguration
+            else f"{APP}' need for configuration and argument --dry-run are not compatible."
+        )
+        super().__init__(message)
+
+
 class DeleteMergedBranches:
     _CONFIG_KEY_CONFIGURED = "delete-merged-branches.configured"
     _CONFIG_VALUE_CONFIGURED = "5.0.0+"  # i.e. most ancient version with compatible config
@@ -159,6 +169,8 @@ class DeleteMergedBranches:
     def ensure_configured(self, force_reconfiguration):
         git_config = self._git.extract_git_config()
         if force_reconfiguration or not self._is_configured(git_config):
+            if self._git.pretend:
+                raise _CannotDryRunConfigurationError(force_reconfiguration)
             self._configure(git_config)
             git_config = self._git.extract_git_config()
         assert self._is_configured(git_config)

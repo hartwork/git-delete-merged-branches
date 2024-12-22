@@ -46,6 +46,10 @@ class Git:
         self._pretend = pretend
         self._working_directory = work_dir
 
+    @property
+    def pretend(self):
+        return self._pretend
+
     def _wrap_subprocess(self, subprocess_function, argv, is_write, pretend_result, env):
         pretend = is_write and self._pretend
         if self._verbose:

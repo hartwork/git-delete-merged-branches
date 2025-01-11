@@ -89,8 +89,7 @@ class DeleteMergedBranches:
             raise _TooFewOptionsAvailable
 
         help = (
-            "(Press [Space] to toggle selection, [Enter]/[Return] to accept"
-            ", [Ctrl]+[C] to quit.)"
+            "(Press [Space] to toggle selection, [Enter]/[Return] to accept, [Ctrl]+[C] to quit.)"
         )
 
         old_names = set(old_names)
@@ -136,7 +135,7 @@ class DeleteMergedBranches:
     def _configure_excluded_branches(self, git_config, new_required_branches: set[str]):
         valid_names = sorted(set(self._git.find_all_branch_names()) - new_required_branches)
         self._interactively_edit_list(
-            "[2/3] Which of these branches (if any)" " should be kept around at all times?",
+            "[2/3] Which of these branches (if any) should be kept around at all times?",
             valid_names,
             self.find_excluded_branches(git_config),
             self._FORMAT_BRANCH_EXCLUDED,
@@ -145,8 +144,7 @@ class DeleteMergedBranches:
 
     def _configure_enabled_remotes(self, git_config):
         self._interactively_edit_list(
-            "[3/3] Which remotes (if any) do you want to enable"
-            " deletion of merged branches for?",
+            "[3/3] Which remotes (if any) do you want to enable deletion of merged branches for?",
             self._git.find_remotes(),
             self.find_enabled_remotes(git_config),
             self._FORMAT_REMOTE_ENABLED,
@@ -278,14 +276,14 @@ class DeleteMergedBranches:
             if candidates_for_squashed_merges:
                 if self._git.has_detached_heads():
                     self._messenger.tell_info(
-                        "Skipped further inspection of branches" " because of detached HEAD."
+                        "Skipped further inspection of branches because of detached HEAD."
                     )
                     check_for_squash_merges = False
 
                 if check_for_squash_merges:
                     if self._git.has_uncommitted_changes():
                         self._messenger.tell_info(
-                            "Skipped further inspection of branches" " due to uncommitted changes."
+                            "Skipped further inspection of branches due to uncommitted changes."
                         )
                         check_for_squash_merges = False
 
@@ -354,8 +352,7 @@ class DeleteMergedBranches:
             if branch_would_be_analyzed:
                 excluded_branches = excluded_branches | {working_tree_branch}
                 self._messenger.tell_info(
-                    f"Skipped branch {working_tree_branch!r} "
-                    "because it is currently checked out."
+                    f"Skipped branch {working_tree_branch!r} because it is currently checked out."
                 )
 
         truly_merged, defacto_merged = self._find_branches_merged_to_all_targets_for_single_remote(
@@ -398,7 +395,7 @@ class DeleteMergedBranches:
             for branch_name in required_target_branches
         ):
             self._messenger.tell_info(
-                f"Skipped remote {remote_name!r} " "as it does not have all required branches."
+                f"Skipped remote {remote_name!r} as it does not have all required branches."
             )
             return
 

@@ -45,7 +45,7 @@ class Messenger:
         self._produce_and_request_air("")
         epilog = f"  # {comment}" if comment else ""
         argv = [escape_for_shell_display(arg) for arg in argv]
-        message = f'# {" ".join(argv)}'
+        message = f"# {' '.join(argv)}"
         if self._colorize:
             message = f"{_COMMAND_COLOR}{message}{_RESET_COLOR}"
         message += epilog

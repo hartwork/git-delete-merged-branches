@@ -109,6 +109,8 @@ class Git:
         # strip_left==2 strips leading "refs/heads/" and "refs/remotes/"
         argv = [
             self._GIT,
+            "-c",
+            "column.branch=plain",
             "branch",
             f"--format=%(refname:lstrip={strip_left})",
         ]

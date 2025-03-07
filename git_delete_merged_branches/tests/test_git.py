@@ -1,6 +1,7 @@
 # Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under GPL v3 or later
 import os
+import shlex
 import subprocess
 from tempfile import TemporaryDirectory
 from textwrap import dedent
@@ -25,6 +26,33 @@ class FindBranchesTest(TestCase):
         with patch.object(subprocess, "check_output", return_value=command_output_to_inject):
             actual_branches = git._find_branches()
 
+        self.assertEqual(actual_branches, expected_branches)
+
+    @parameterized.expand(
+        [
+            # NOTE: No point in testing values "never" or "auto"
+            ("column.ui", "always"),
+            # NOTE: No point in testing value "plain"
+            ("column.branch", "column"),
+            ("column.branch", "row"),
+        ]
+    )
+    def test_find_branches_robust_towards_column_mode(self, git_config_key, git_config_value):
+        expected_branches = ["main_1", "main_2"]
+        with TemporaryDirectory() as tempdir:
+            run_script(
+                dedent(
+                    f"""
+                    git -c init.defaultBranch=main_1 init
+                    git commit --allow-empty -m 'First commit'
+                    git config {shlex.quote(git_config_key)} {shlex.quote(git_config_value)}
+                    git branch main_2 main_1
+                    """
+                ),
+                tempdir,
+            )
+            git = Git(Messenger(colorize=False), pretend=True, verbose=False, work_dir=tempdir)
+            actual_branches = git._find_branches()
         self.assertEqual(actual_branches, expected_branches)
 
 

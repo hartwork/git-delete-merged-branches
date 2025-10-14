@@ -6,7 +6,6 @@ import re
 from functools import partial, reduce
 from operator import and_
 from subprocess import CalledProcessError
-from typing import Optional
 
 from ._git import CheckoutFailed, MergeBaseFailed, PullFailed
 from ._metadata import APP
@@ -197,7 +196,7 @@ class DeleteMergedBranches:
         return cls._filter_git_config(git_config, cls._PATTERN_REMOTE_ENABLED)
 
     def _find_branches_merged_using_git_branch_merged(
-        self, required_target_branches, remote_name: Optional[str]
+        self, required_target_branches, remote_name: str | None
     ) -> set[str]:
         if remote_name is None:
             find_branches_that_were_merged_into = self._git.find_merged_local_branches_for
@@ -301,7 +300,7 @@ class DeleteMergedBranches:
         return branches_merged_to_all_required_targets
 
     def _find_branches_merged_to_all_targets_for_single_remote(
-        self, required_target_branches, excluded_branches: set[str], remote_name: Optional[str]
+        self, required_target_branches, excluded_branches: set[str], remote_name: str | None
     ) -> tuple[set[str], set[str]]:
         if remote_name is not None:
             excluded_branches = {

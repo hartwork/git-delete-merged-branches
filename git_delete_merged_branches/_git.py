@@ -4,7 +4,6 @@
 import os
 import subprocess
 from collections import OrderedDict
-from typing import Optional
 
 from ._metadata import APP
 
@@ -146,7 +145,7 @@ class Git:
         extra_argv = ["--remote", "--list", f"{remote_name}/*"]
         return self._find_branches(extra_argv)
 
-    def find_current_branch(self) -> Optional[str]:
+    def find_current_branch(self) -> str | None:
         # Note: Avoiding "git branch --show-current" of Git >=2.22.0
         #       to keep Git 2.17.1 of Ubuntu 18.04 in the boat, for now.
         argv = [self._GIT, "rev-parse", "--symbolic-full-name", "HEAD"]
@@ -160,7 +159,7 @@ class Git:
             return None  # detached head
         return reference[len(expected_prefix) :]
 
-    def find_working_tree_branches(self) -> list[Optional[str]]:
+    def find_working_tree_branches(self) -> list[str | None]:
         argv = [self._GIT, "worktree", "list", "--porcelain"]  # requires Git >=2.7.0
         output_bytes = self._subprocess_check_output(argv, is_write=False)
         lines = self._output_bytes_to_lines(output_bytes)
@@ -168,7 +167,7 @@ class Git:
         detached_line_prefix = "detached"
         branch_line_prefix = "branch "
         branch_prefix = "refs/heads/"
-        branch_names: list[Optional[str]] = []
+        branch_names: list[str | None] = []
 
         for line in lines:
             if line.startswith(detached_line_prefix):
@@ -266,7 +265,7 @@ class Git:
                 raise PullFailed
             raise
 
-    def _has_changes(self, extra_argv: Optional[list[str]] = None) -> bool:
+    def _has_changes(self, extra_argv: list[str] | None = None) -> bool:
         argv = [self._GIT, "diff", "--exit-code", "--quiet"]
         if extra_argv:
             argv += extra_argv

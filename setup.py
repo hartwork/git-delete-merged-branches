@@ -24,7 +24,7 @@ setup(
     author="Sebastian Pipping",
     author_email="sebastian@pipping.org",
     url=f"https://github.com/hartwork/{APP}",
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     setup_requires=[
         "setuptools>=38.6.0",  # for long_description_content_type
     ],
@@ -48,11 +48,11 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Topic :: Software Development :: Version Control",
         "Topic :: Software Development :: Version Control :: Git",
     ],

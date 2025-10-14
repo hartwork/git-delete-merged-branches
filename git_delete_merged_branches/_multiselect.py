@@ -3,7 +3,7 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
@@ -137,7 +137,7 @@ class _HeightTrackingScrollablePane(ScrollablePane):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         self.current_height = write_position.height
         super().write_to_screen(
@@ -191,9 +191,9 @@ class _MultiSelectPrompt:
         self._header_lines: [_MultiSelectPrompt.HeaderLine] = []
         self._footer_lines: [_MultiSelectPrompt.PlainLine] = []
 
-        self._item_selection_pane: Optional[_HeightTrackingScrollablePane] = None
-        self._buffer: Optional[Buffer] = None
-        self._document: Optional[Document] = None
+        self._item_selection_pane: _HeightTrackingScrollablePane | None = None
+        self._buffer: Buffer | None = None
+        self._document: Document | None = None
         self._accepted_selection: list[Any] = None
 
     def _move_cursor_one_page_vertically(self, upwards: bool):

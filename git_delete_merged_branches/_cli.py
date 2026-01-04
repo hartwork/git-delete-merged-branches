@@ -39,13 +39,22 @@ def _parse_command_line(colorize: bool, args=None):
 
     prog = os.path.basename(sys.argv[0])
 
-    parser = argparse.ArgumentParser(
+    parser_kwargs = dict(
         prog=prog,
         add_help=False,
         description=DESCRIPTION,
         epilog=_EPILOG,
         formatter_class=formatter_class,
     )
+
+    # The enabled-by-default color in Python >=3.14
+    # (https://github.com/python/cpython/issues/130645) is nice but
+    # breaks git-dmb's own coloring, so we disable their coloring.
+    # Keyword "color" does not exist prior to Python 3.14.
+    if sys.version_info >= (3, 14):
+        parser_kwargs["color"] = False
+
+    parser = argparse.ArgumentParser(**parser_kwargs)
 
     modes = parser.add_argument_group("modes").add_mutually_exclusive_group()
     modes.add_argument(

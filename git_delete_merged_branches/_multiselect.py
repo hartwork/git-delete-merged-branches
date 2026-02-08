@@ -343,8 +343,8 @@ class _MultiSelectPrompt:
         item_selection_pane = _HeightTrackingScrollablePane(
             item_selection_window, height=pane_height, scroll_offsets=pane_scroll_offsets
         )
-        item_selection_pane.show_scrollbar = (
-            lambda: (item_selection_pane.current_height or 0) < self._document.line_count
+        item_selection_pane.show_scrollbar = lambda: (
+            (item_selection_pane.current_height or 0) < self._document.line_count
         )
 
         item_selection_pane_plus_search = HSplit([item_selection_pane, search])

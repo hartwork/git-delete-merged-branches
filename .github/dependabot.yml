@@ -13,3 +13,13 @@ updates:
       - "enhancement"
     schedule:
       interval: "weekly"
+
+  - package-ecosystem: "pre-commit"
+    commit-message:
+      include: "scope"
+      prefix: "pre-commit"
+    directory: "/"
+    labels:
+      - "enhancement"
+    schedule:
+      interval: "weekly"

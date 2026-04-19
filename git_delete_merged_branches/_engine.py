@@ -537,7 +537,11 @@ class DeleteMergedBranches:
             )
 
     def determine_excluded_branches(
-        self, git_config: dict, excluded_branches: list[str], included_branches_patterns: list[str]
+        self,
+        git_config: dict,
+        excluded_branches: list[str],
+        included_branches_patterns: list[str],
+        excluded_branches_patterns: list[str] = [],
     ) -> set[str]:
         existing_branches = set(self._git.find_all_branch_names())
         if excluded_branches:
@@ -563,6 +567,17 @@ class DeleteMergedBranches:
                 if matcher.search(branch_name):
                     continue
                 excluded_branches_set.add(branch_name)
+
+        # Exclude branches matching any of the exclusion patterns
+        for excluded_branches_pattern in excluded_branches_patterns:
+            try:
+                matcher = re.compile(excluded_branches_pattern)
+            except re.error:
+                raise _InvalidRegexPattern(excluded_branches_pattern)
+
+            for branch_name in existing_branches:
+                if matcher.search(branch_name):
+                    excluded_branches_set.add(branch_name)
 
         return excluded_branches_set
 

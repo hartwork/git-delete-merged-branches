@@ -133,6 +133,20 @@ def _parse_command_line(colorize: bool, args=None):
             ', then acts in logical conjunction ("and")'
         ),
     )
+    scope.add_argument(
+        "--exclude-regex",
+        metavar="PATTERN",
+        dest="excluded_branches_patterns",
+        default=[],
+        action="append",
+        help=(
+            "exclude branches from deletion that match the given"
+            ' regular expression (e.g. "^release-")'
+            '; syntax is that of Python module "re"'
+            "; can be passed multiple times"
+            ', then acts in logical conjunction ("and")'
+        ),
+    )
 
     switches = parser.add_argument_group("flags")
     switches.add_argument(
@@ -175,7 +189,10 @@ def _innermost_main(config, messenger, colorize: bool):
         git_config, config.required_target_branches
     )
     excluded_branches = dmb.determine_excluded_branches(
-        git_config, config.excluded_branches, config.included_branches_patterns
+        git_config,
+        config.excluded_branches,
+        config.included_branches_patterns,
+        config.excluded_branches_patterns,
     )
     enabled_remotes = dmb.determine_enabled_remotes(git_config, config.enabled_remotes)
 

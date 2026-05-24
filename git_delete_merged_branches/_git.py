@@ -6,6 +6,7 @@ import subprocess
 from collections import OrderedDict
 
 from ._metadata import APP
+from ._without import without
 
 
 class GitException(Exception):
@@ -54,6 +55,7 @@ class Git:
         if self._verbose:
             comment = "skipped due to --dry-run" if pretend else ""
             display_argv = [a for a in argv if not a.startswith("--format=")]
+            display_argv = without(["-c", "column.branch=plain"], display_argv)
             self._messenger.tell_command(display_argv, comment)
         if pretend:
             return pretend_result

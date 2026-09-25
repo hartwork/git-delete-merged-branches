@@ -174,6 +174,55 @@ class MergeDetectionTest(TestCase):
             self.assertEqual(truly_merged, set())
             self.assertEqual(defacto_merged, {"defacto-squash-merged1", "defacto-squash-merged2"})
 
+    def test_effort_2_squashed_cherries_single_commit_after_merging_trunk(self):
+        setup_script = dedent("""
+            git init -b trunk
+
+            # Create a commit to base future branches upon
+            echo line1 > file1.txt
+            echo line2 >> file1.txt
+            git add file1.txt
+            git commit -m 'Add file1.txt'
+
+            # Create a branch with a single commit
+            git checkout -b defacto-squash-merged3
+            echo line1 >  file1.txt
+            echo line2 >> file1.txt
+            echo line3 >> file1.txt
+            git add file1.txt
+            git commit -m 'Update file1.txt'
+
+            # Add another commit on trunk
+            git checkout trunk
+            echo line1   >  file1.txt
+            echo line1.1 >> file1.txt
+            echo line2   >> file1.txt
+            git add file1.txt
+            git commit -m 'Update file1.txt'
+
+            # Merge trunk into defacto-squash-merged3 which is now 1 commit + 1 merge commit
+            git checkout defacto-squash-merged3
+            git merge --no-edit trunk
+
+            # Squash-merge defacto-squash-merged3 into trunk
+            git checkout trunk
+            git merge --squash defacto-squash-merged3
+            git commit -m "Add squashed copy of 'defacto-squash-merged3'"
+        """)
+        with TemporaryDirectory() as d:
+            run_script(setup_script, cwd=d)
+            git = create_git(d)
+            self.assertEqual(git.find_local_branches(), ["defacto-squash-merged3", "trunk"])
+
+            dmb = create_dmb(git, effort_level=2)
+            truly_merged, defacto_merged = (
+                dmb._find_branches_merged_to_all_targets_for_single_remote(
+                    {"trunk"}, set(), remote_name=None
+                )
+            )
+            self.assertEqual(truly_merged, set())
+            self.assertEqual(defacto_merged, {"defacto-squash-merged3"})
+
 
 class RefreshTargetBranchesTest(TestCase):
     def test_refresh_gets_branches_back_in_sync(self):

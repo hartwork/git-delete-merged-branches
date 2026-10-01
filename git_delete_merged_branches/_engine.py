@@ -492,6 +492,19 @@ class DeleteMergedBranches:
             self._messenger.tell_info("Skipped refreshing branches due to uncommitted changes.")
             return
 
+        other_worktree_branches = set(self._git.find_working_tree_branches()) - {initial_branch}
+        skipped_branches = sorted(set(sorted_branches) & other_worktree_branches)
+        if skipped_branches:
+            self._messenger.tell_info(
+                "Skipped refreshing branches checked out in other worktrees:\n"
+                + "\n".join(f"  - {name}" for name in skipped_branches)
+            )
+            sorted_branches = [
+                name for name in sorted_branches if name not in other_worktree_branches
+            ]
+            if not sorted_branches:
+                return
+
         description = (
             f'Do you want to run "git pull --ff-only"'
             f" for {len(sorted_branches)} branch(es):\n"

@@ -180,6 +180,11 @@ class RefreshTargetBranchesTest(TestCase):
         [
             ("mixed", ["occupied", "pull-works"], ["pull-works"]),
             ("current_branch", ["occupied", "trunk"], ["trunk"]),
+            (
+                "current_branch_after_switch",
+                ["occupied", "pull-works", "trunk"],
+                ["pull-works", "trunk"],
+            ),
             ("all_occupied", ["occupied"], []),
         ]
     )

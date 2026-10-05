@@ -176,6 +176,81 @@ class MergeDetectionTest(TestCase):
 
 
 class RefreshTargetBranchesTest(TestCase):
+    @parameterized.expand(
+        [
+            ("mixed", ["occupied", "pull-works"], ["pull-works"]),
+            ("current_branch", ["occupied", "trunk"], ["trunk"]),
+            (
+                "current_branch_after_switch",
+                ["occupied", "pull-works", "trunk"],
+                ["pull-works", "trunk"],
+            ),
+            ("all_occupied", ["occupied"], []),
+        ]
+    )
+    def test_refresh_skips_other_worktrees(self, _name, target_branches, refreshed_branches):
+        setup_script = dedent("""
+            mkdir upstream
+            cd upstream
+                git init -b trunk
+                echo line1 > file.txt
+                git add file.txt
+                git commit -m 'Add file.txt'
+                git branch occupied
+                git branch pull-works
+            cd ..
+            git clone -o upstream upstream downstream
+            cd downstream
+                git branch --track occupied upstream/occupied
+                git branch --track pull-works upstream/pull-works
+                git worktree add ../other-worktree occupied
+            cd ..
+            cd upstream
+                echo line2 >> file.txt
+                git commit -a -m 'Add line 2'
+                git branch -f occupied trunk
+                git branch -f pull-works trunk
+            cd ..
+            echo local-change >> other-worktree/file.txt
+        """)
+
+        with TemporaryDirectory() as d:
+            run_script(setup_script, cwd=d)
+            downstream_git = create_git(os.path.join(d, "downstream"))
+            other_git = create_git(os.path.join(d, "other-worktree"))
+            messenger = Mock()
+            confirmation = Mock()
+            confirmation.confirmed.return_value = True
+            downstream_dmb = DeleteMergedBranches(
+                downstream_git,
+                messenger=messenger,
+                confirmation=confirmation,
+                selector=Mock(),
+                effort_level=1,
+            )
+            downstream_git.update_and_prune_remote("upstream")
+
+            downstream_dmb.refresh_target_branches(target_branches)
+
+            for branch in ["occupied", "pull-works", "trunk"]:
+                with self.subTest(branch=branch):
+                    self.assertEqual(
+                        len(downstream_git.cherry(branch, f"upstream/{branch}")),
+                        0 if branch in refreshed_branches else 1,
+                    )
+            self.assertEqual(downstream_git.find_current_branch(), "trunk")
+            self.assertEqual(other_git.find_current_branch(), "occupied")
+            with open(os.path.join(d, "other-worktree", "file.txt")) as f:
+                self.assertEqual(f.read(), "line1\nlocal-change\n")
+            messenger.tell_info.assert_called_once_with(
+                "Skipped refreshing branches checked out in other worktrees:\n  - occupied"
+            )
+            if refreshed_branches:
+                confirmation.confirmed.assert_called_once()
+                self.assertNotIn("occupied", confirmation.confirmed.call_args.args[0])
+            else:
+                confirmation.confirmed.assert_not_called()
+
     def test_refresh_gets_branches_back_in_sync(self):
         setup_script = dedent("""
             mkdir upstream

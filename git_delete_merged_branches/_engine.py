@@ -492,6 +492,19 @@ class DeleteMergedBranches:
             self._messenger.tell_info("Skipped refreshing branches due to uncommitted changes.")
             return
 
+        other_worktree_branches = set(self._git.find_working_tree_branches()) - {initial_branch}
+        skipped_branches = sorted(set(sorted_branches) & other_worktree_branches)
+        if skipped_branches:
+            self._messenger.tell_info(
+                "Skipped refreshing branches checked out in other worktrees:\n"
+                + "\n".join(f"  - {name}" for name in skipped_branches)
+            )
+            sorted_branches = [
+                name for name in sorted_branches if name not in other_worktree_branches
+            ]
+            if not sorted_branches:
+                return
+
         description = (
             f'Do you want to run "git pull --ff-only"'
             f" for {len(sorted_branches)} branch(es):\n"
@@ -501,10 +514,10 @@ class DeleteMergedBranches:
         if not self._confirmation.confirmed(description):
             return
 
-        needs_a_switch_back = False
+        current_branch = initial_branch
         try:
             for branch_name in sorted_branches:
-                if branch_name != initial_branch:
+                if branch_name != current_branch:
                     try:
                         self._git.checkout(branch_name)
                     except CheckoutFailed:
@@ -514,7 +527,7 @@ class DeleteMergedBranches:
                             " because the branch cannot be checkout out."
                         )
                         continue
-                    needs_a_switch_back = True
+                    current_branch = branch_name
 
                 try:
                     self._git.pull_ff_only()
@@ -525,7 +538,7 @@ class DeleteMergedBranches:
                         " with fast forward."
                     )
         finally:
-            if needs_a_switch_back:
+            if current_branch != initial_branch:
                 self._git.checkout(initial_branch)
 
     def delete_merged_branches(self, required_target_branches, excluded_branches, enabled_remotes):

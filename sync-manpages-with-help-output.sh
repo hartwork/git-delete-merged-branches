@@ -5,7 +5,7 @@
 set -e
 set -o pipefail
 
-_BUILD_MONTH=2026-07  # for reproducible builds; bump when doing releases
+_BUILD_MONTH=2026-10  # for reproducible builds; bump when doing releases
 
 sed_args=(
     # Produce familiar section "synopsis"

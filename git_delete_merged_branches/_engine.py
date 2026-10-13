@@ -263,8 +263,7 @@ class DeleteMergedBranches:
                 cherry_lines = self._git.cherry(target_branch, topic_branch)
                 defacto_merged_into_target = all(line.startswith("-") for line in cherry_lines)
                 if not defacto_merged_into_target:
-                    if len(cherry_lines) > 1:
-                        candidates_for_squashed_merges.append(topic_branch)
+                    candidates_for_squashed_merges.append(topic_branch)
                     break
             else:  # i.e. no break happened above
                 branches_merged_to_all_required_targets.add(topic_branch)

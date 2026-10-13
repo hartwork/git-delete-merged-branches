@@ -3,4 +3,4 @@
 
 APP = "git-delete-merged-branches"
 DESCRIPTION = "Command-line tool to delete merged Git branches"
-VERSION = "7.6.1"
+VERSION = "7.7.0"

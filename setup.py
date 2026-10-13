@@ -33,7 +33,6 @@ setup(
         "prompt-toolkit>=3.0.18",
     ],
     extras_require=_extras_require,
-    tests_require=_tests_require,
     packages=find_packages(),
     entry_points={
         "console_scripts": [
@@ -43,7 +42,6 @@ setup(
     },
     classifiers=[
         "Development Status :: 4 - Beta",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",

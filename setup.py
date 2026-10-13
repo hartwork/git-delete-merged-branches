@@ -33,7 +33,6 @@ setup(
         "prompt-toolkit>=3.0.18",
     ],
     extras_require=_extras_require,
-    tests_require=_tests_require,
     packages=find_packages(),
     entry_points={
         "console_scripts": [

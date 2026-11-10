@@ -308,6 +308,28 @@ class GitConfigKeysContainDotsTest(TestCase):
         self.assertEqual(extractor_function(git_config_dict), [expected_value])
 
 
+class DetermineRequiredTargetBranchesTest(TestCase):
+    def _create_dmb(self, existing_branches):
+        git_mock = Mock(find_local_branches=Mock(return_value=existing_branches))
+        return DeleteMergedBranches(
+            git=git_mock, messenger=Mock(), confirmation=Mock(), selector=Mock(), effort_level=2
+        )
+
+    def test_valid_branches_pass(self):
+        dmb = self._create_dmb(["trunk", "topic"])
+        self.assertEqual(
+            dmb.determine_required_target_branches({}, ["trunk", "topic"]), {"trunk", "topic"}
+        )
+
+    def test_unknown_branch_is_reported_by_its_own_name(self):
+        from .._engine import _NoSuchBranchException
+
+        dmb = self._create_dmb(["trunk", "topic"])
+        with self.assertRaises(_NoSuchBranchException) as context:
+            dmb.determine_required_target_branches({}, ["trunk", "no-such-branch"])
+        self.assertEqual(str(context.exception), "There is no branch 'no-such-branch'.")
+
+
 class DetermineExcludedBranchesTest(TestCase):
     @parameterized.expand(
         [

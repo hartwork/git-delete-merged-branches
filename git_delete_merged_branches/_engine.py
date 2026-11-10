@@ -573,7 +573,7 @@ class DeleteMergedBranches:
             required_target_branches_set = set(required_target_branches)
             invalid_branches = required_target_branches_set - existing_branches
             if invalid_branches:
-                raise _NoSuchBranchException(required_target_branches[0])
+                raise _NoSuchBranchException(sorted(invalid_branches)[0])
         else:
             required_target_branches_set = (
                 set(self.find_required_branches(git_config)) & existing_branches
